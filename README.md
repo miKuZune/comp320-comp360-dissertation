@@ -3,6 +3,6 @@
 * COMP360 assignment 2: Dissertation
 Viewing link: https://www.overleaf.com/read/jvhwptkksczr
 
-# comp32-360-artefact
+# comp320-360-artefact
 * COMP320 assignment 1: Research Artefact prototype
 * COMP360 assignment 1: Reserch Artefact
