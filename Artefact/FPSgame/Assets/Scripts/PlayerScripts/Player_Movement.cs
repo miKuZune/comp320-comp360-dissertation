@@ -25,6 +25,7 @@ public class Player_Movement : MonoBehaviour {
     float currentMoveSpeed;             // Stores the current movespeed the player is moving at. Either walk speed or run speed.
 
     public void ToggleActive() { isActive = !isActive; }        // Allows for the player to be enabled and disabled at any time from any script.
+    public void SetInActive() { isActive = false; }
 
     // Use this for initialization
     void Start ()
