@@ -25,9 +25,6 @@ public class Player_Char_Manager : MonoBehaviour , I_CharManager{
 	// Update is called once per frame
 	void Update ()
     {
-		if(Input.GetKeyDown(KeyCode.E))
-        {
-            GetComponent<Health>().DealDmg(3);
-        }
+		
 	}
 }

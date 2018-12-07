@@ -15,7 +15,6 @@ public class Health : MonoBehaviour {
     {
         currHealth = maxHealth;
         charManager = GetComponent<I_CharManager>();
-        Debug.Log(currHealth);
 	}
 	
     public void DealDmg(int dmg)
@@ -23,7 +22,7 @@ public class Health : MonoBehaviour {
         currHealth -= dmg;
 
         CheckForDeath();
-        charManager.OnDmg();
+        if (charManager != null) { charManager.OnDmg(); }
     }
 
     void CheckForDeath()
@@ -31,7 +30,9 @@ public class Health : MonoBehaviour {
         if(currHealth <= 0)
         {
             currHealth = 0;
-            charManager.OnDeath();
+            if (charManager != null) { charManager.OnDeath(); }
+            else { Destroy(this.gameObject); }
+            
         }
     }
 }
