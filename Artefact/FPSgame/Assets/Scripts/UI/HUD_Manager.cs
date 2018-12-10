@@ -11,6 +11,8 @@ public class HUD_Manager : MonoBehaviour {
     Text healthText;                                                                        // Store a reference to the health text component.
     Text ammoText;                                                                          // Store the text component for ammo.
 
+    Scrollbar reloadBar;                                                                    // Store a reference to the scroll bar used to represent the progress of the reload.
+
     GameObject inGameHUD;                                                                   // Store a reference to the HUD that is in the game scene.
 
     void Awake()
@@ -26,7 +28,11 @@ public class HUD_Manager : MonoBehaviour {
 
         healthText = inGameHUD.transform.Find("HealthPanel").GetComponentInChildren<Text>();    // Get and store the text to display the health to.
         ammoText = inGameHUD.transform.Find("AmmoPanel").GetComponentInChildren<Text>();        // Get and store the text to dispaly the ammo to.
-        
+
+        reloadBar = inGameHUD.transform.Find("ReloadTime").GetComponent<Scrollbar>();
+
+        DisableReload();
+
         UpdateHealth();
 	}
 
@@ -46,5 +52,22 @@ public class HUD_Manager : MonoBehaviour {
     {
         if (ammoText == null) { return; }
         ammoText.text = "Ammo: " + currAmmo + "/" + maxAmmo;
+    }
+
+
+    public void EnableReload()
+    {
+        reloadBar.gameObject.SetActive(true);
+    }
+
+    public void DisableReload()
+    {
+        reloadBar.gameObject.SetActive(false);
+    }
+
+    public void UpdateReloadTime(float reloadTime, float currProgress)
+    {
+        float score = currProgress / reloadTime;
+        reloadBar.size = score;
     }
 }

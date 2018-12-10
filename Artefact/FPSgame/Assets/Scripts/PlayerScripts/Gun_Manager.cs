@@ -16,12 +16,29 @@ public class Gun_Manager : MonoBehaviour {
 
     float timeSinceLastShot;
 
+    bool reloading = false;
+    float reloadTimer;
+
     [Header("AssaultRifleStats")]
     public int AR_MaxAmmo;
     public int AR_Damage;
     public float AR_ReloadTimer;
     public float AR_FireRate;
     public float AR_Accuracy;
+
+    [Header("Shotgun stats")]
+    public int S_MaxAmmo;
+    public int S_Damage;
+    public float S_ReloadTimer;
+    public float S_FireRate;
+    public float S_Accuracy;
+
+    [Header("Sniper stats")]
+    public int SN_MaxAmmo;
+    public int SN_Damage;
+    public float SN_ReloadTimer;
+    public float SN_FireRate;
+    public float SN_Accuracy;
 
     void Awake()
     {
@@ -35,7 +52,8 @@ public class Gun_Manager : MonoBehaviour {
         cam = Camera.main;
 
         guns = new I_Gun[] { new AssaultRifle(AR_MaxAmmo, AR_Damage, AR_ReloadTimer, AR_FireRate, AR_Accuracy) 
-                           , new AssaultRifle(AR_MaxAmmo, AR_Damage, AR_ReloadTimer, AR_FireRate, AR_Accuracy)};
+                           , new Shotgun(S_MaxAmmo, S_Damage, S_ReloadTimer, S_FireRate, S_Accuracy)
+                           , new Sniper(SN_MaxAmmo, SN_Damage, SN_ReloadTimer, SN_FireRate, SN_Accuracy)};
 
         foreach(Transform child in transform)
         {
@@ -71,6 +89,24 @@ public class Gun_Manager : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
+        if (reloading)
+        {
+            reloadTimer += Time.deltaTime;
+
+            HUD_Manager.instance.UpdateReloadTime(currentGun.ReloadTime, reloadTimer);
+
+            if(reloadTimer > currentGun.ReloadTime)
+            {
+                currentGun.CurrentAmmo = currentGun.MaxAmmo;
+                reloadTimer = 0;
+                reloading = false;
+                HUD_Manager.instance.UpdateAmmo();
+                HUD_Manager.instance.DisableReload();
+                timeSinceLastShot = currentGun.FireRate;
+            }
+            return;
+        }
+
         if(Input.GetButton("Fire1") && timeSinceLastShot >= currentGun.FireRate)
         {
             currentGun.Shoot(cam.transform.position, cam.transform.forward);
@@ -82,6 +118,12 @@ public class Gun_Manager : MonoBehaviour {
             currentGunID++;
             if (currentGunID >= guns.Length){ currentGunID = 0; }
             LoadGun(currentGunID);
+        }
+
+        if(Input.GetKey(KeyCode.R) && currentGun.CurrentAmmo != currentGun.MaxAmmo)
+        {
+            reloading = true;
+            HUD_Manager.instance.EnableReload();
         }
 
         timeSinceLastShot += Time.deltaTime;
