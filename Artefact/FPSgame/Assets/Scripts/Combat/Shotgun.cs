@@ -6,7 +6,11 @@ public class Shotgun : MonoBehaviour, I_Gun {
 
     // Local Variable declartion.
     public int maxAmmo, currentAmmo, damage;
-    public float reloadTime, fireRate, accuracy;
+    public float reloadTime, fireRate, accuracy, dmgFallOffRate;
+
+    // Dynamic variables
+    float calculatedDmg;
+
     // I_Gun gets and sets. Convert the interface properties to usable variables.
     public int MaxAmmo
     {
@@ -40,7 +44,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
     }
 
     // Constructor
-    public Shotgun(int maxAmmo, int damage, float reloadTime, float fireRate, float accuracy)
+    public Shotgun(int maxAmmo, int damage, float reloadTime, float fireRate, float accuracy, float damageFallOffRate)
     {
         this.maxAmmo = maxAmmo;
         this.currentAmmo = maxAmmo;
@@ -48,6 +52,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
         this.reloadTime = reloadTime;
         this.fireRate = fireRate;
         this.accuracy = accuracy;
+        this.dmgFallOffRate = damageFallOffRate;
     }
 
     public void Shoot(Vector3 startPoint, Vector3 direction)
@@ -58,7 +63,12 @@ public class Shotgun : MonoBehaviour, I_Gun {
         {
             if (hit.transform.tag == "Enemy")
             {
+                float dist = Vector3.Distance(startPoint, hit.point);
+
+                calculatedDmg = CalculateDamage(dist);
+
                 DealDamage(hit.transform.gameObject);
+                Gun_Manager.instance.ActivateVFX();
             }
 
             currentAmmo--;
@@ -68,7 +78,16 @@ public class Shotgun : MonoBehaviour, I_Gun {
 
     public void DealDamage(GameObject enemy)
     {
-        enemy.GetComponent<Health>().DealDmg(damage);
+        enemy.GetComponent<Health>().DealDmg((int)calculatedDmg);
 
+    }
+
+    float CalculateDamage(float dist)
+    {
+        float dmgtoDeal = damage - ((dist * dist) * dmgFallOffRate);                        // Calculate the damage using a negative power for fall off damage.
+            
+        if(dmgtoDeal < 1){ dmgtoDeal = 1; }                                                 // Limit the minimum damage to be 1.
+
+        return dmgtoDeal;
     }
 }

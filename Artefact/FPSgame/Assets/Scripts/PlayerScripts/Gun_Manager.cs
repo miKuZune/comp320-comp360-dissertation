@@ -10,6 +10,7 @@ public class Gun_Manager : MonoBehaviour {
     public I_Gun currentGun;                                            // Store the current gun.
 
     int currentGunID;
+    List<ParticleSystem> gunParticles = new List<ParticleSystem>();
 
     List<GameObject> gunObjs = new List<GameObject>();
     Camera cam;
@@ -32,6 +33,7 @@ public class Gun_Manager : MonoBehaviour {
     public float S_ReloadTimer;
     public float S_FireRate;
     public float S_Accuracy;
+    public float damageFallOffRate;
 
     [Header("Sniper stats")]
     public int SN_MaxAmmo;
@@ -52,7 +54,7 @@ public class Gun_Manager : MonoBehaviour {
         cam = Camera.main;
 
         guns = new I_Gun[] { new AssaultRifle(AR_MaxAmmo, AR_Damage, AR_ReloadTimer, AR_FireRate, AR_Accuracy) 
-                           , new Shotgun(S_MaxAmmo, S_Damage, S_ReloadTimer, S_FireRate, S_Accuracy)
+                           , new Shotgun(S_MaxAmmo, S_Damage, S_ReloadTimer, S_FireRate, S_Accuracy, damageFallOffRate)
                            , new Sniper(SN_MaxAmmo, SN_Damage, SN_ReloadTimer, SN_FireRate, SN_Accuracy)};
 
         foreach(Transform child in transform)
@@ -60,6 +62,7 @@ public class Gun_Manager : MonoBehaviour {
             if(child.tag == "Gun")
             {
                 gunObjs.Add(child.gameObject);
+                gunParticles.Add(child.GetComponentInChildren<ParticleSystem>());
                 child.gameObject.SetActive(false);
             }
         }
@@ -81,6 +84,9 @@ public class Gun_Manager : MonoBehaviour {
 
         currentGun = guns[newGunID];
         gunObjs[newGunID].SetActive(true);
+
+        gunParticles[newGunID].gameObject.SetActive(false);
+
         currentGunID = newGunID;
 
         HUD_Manager.instance.UpdateAmmo(currentGun.CurrentAmmo, currentGun.MaxAmmo);
@@ -110,6 +116,7 @@ public class Gun_Manager : MonoBehaviour {
         if(Input.GetButton("Fire1") && timeSinceLastShot >= currentGun.FireRate)
         {
             currentGun.Shoot(cam.transform.position, cam.transform.forward);
+            
             timeSinceLastShot = 0;
         }
 
@@ -128,4 +135,10 @@ public class Gun_Manager : MonoBehaviour {
 
         timeSinceLastShot += Time.deltaTime;
 	}
+
+    public void ActivateVFX()
+    {
+        gunParticles[currentGunID].gameObject.SetActive(true);
+        gunParticles[currentGunID].Play();
+    }
 }

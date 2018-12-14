@@ -63,6 +63,7 @@ public class Sniper : MonoBehaviour, I_Gun {
 
             currentAmmo--;
             HUD_Manager.instance.UpdateAmmo();
+            Gun_Manager.instance.ActivateVFX();
         }
     }
 
