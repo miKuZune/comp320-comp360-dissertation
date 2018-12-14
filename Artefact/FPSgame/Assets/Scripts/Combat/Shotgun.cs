@@ -68,11 +68,12 @@ public class Shotgun : MonoBehaviour, I_Gun {
                 calculatedDmg = CalculateDamage(dist);
 
                 DealDamage(hit.transform.gameObject);
-                Gun_Manager.instance.ActivateVFX();
+                
             }
 
             currentAmmo--;
             HUD_Manager.instance.UpdateAmmo();
+            Gun_Manager.instance.ActivateVFX();
         }
     }
 
