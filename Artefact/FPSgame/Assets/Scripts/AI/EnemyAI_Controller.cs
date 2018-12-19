@@ -18,6 +18,9 @@ public class EnemyAI_Controller : MonoBehaviour {
 
     GameObject player;
 
+    [HideInInspector]
+    public GameObject closestCoverObj;
+
     // AI behaviour evaluation variables
     float healthToFleePercent = 20;
     float shootAtPlayerHealthPercent = 20;
@@ -61,6 +64,7 @@ public class EnemyAI_Controller : MonoBehaviour {
         idle = new Idle();
 
         GetComponent<NavMeshAgent>().speed = moveSpeed;                                     // Set Unit's per second the AI can travel.
+
 	}
 	
 	// Update is called once per frame
@@ -87,13 +91,11 @@ public class EnemyAI_Controller : MonoBehaviour {
 
         if (!EvaluateAI_Health()) { return; }
         if (!EvaluatePlayerHealth()) { return; }
-        if (!EvaluateDistToCover()) { return; }
         if (!EvaluateDistToPlayer()) { return; }
+        if (!EvaluateDistToCover()) { return; }
 
         Debug.Log("void zone in controller vairables - deafulting to move to player");
         ChangeBehaviour(Move_ToPlayer);
-
-
     }
 
     bool EvaluateAI_Health()
@@ -198,7 +200,19 @@ public class EnemyAI_Controller : MonoBehaviour {
     {
         float distance = Mathf.Infinity;
 
-        Debug.Log("IMPLEMENT COVER");
+        GameObject[] coverSpots = GameManager.instance.CoverObjs;
+
+        foreach (GameObject cover in coverSpots)
+        {
+            float dist = Vector3.Distance(cover.transform.position, transform.position);
+            if (dist < distance)
+            {
+                distance = dist;
+                closestCoverObj = cover;
+            }
+        }
+
+        if (closestCoverObj == null) { closestCoverObj = coverSpots[0]; }
 
         return distance;
     }

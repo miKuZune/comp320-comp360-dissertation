@@ -6,7 +6,7 @@ public class GameManager : MonoBehaviour {
 
     public static GameManager instance;
 
-    GameObject[] coverObjs;
+    public GameObject[] CoverObjs { get; set; }
 
 	// Use this for initialization
 	void Start ()
@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour {
 
     void FindCoverObjs()
     {
-        coverObjs = GameObject.FindGameObjectsWithTag("Cover") ;
+        CoverObjs = GameObject.FindGameObjectsWithTag("Cover") ;
     }
 
     void ToggleMouse()

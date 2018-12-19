@@ -46,7 +46,6 @@ public class ShootAtPlayer : I_Behaviour
 
     void Shoot()
     {
-        Debug.Log("Bang");
         anim.SetTrigger("shoot");
         BeginShootTimer();
     }

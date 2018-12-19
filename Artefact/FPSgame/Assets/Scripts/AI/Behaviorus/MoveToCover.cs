@@ -1,9 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class MoveToCover : I_Behaviour
 {
+    EnemyAI_Controller owner;
+
+    GameObject targetCover;
+
+    NavMeshAgent NMA;
+
+
     public void End()
     {
         
@@ -11,11 +19,17 @@ public class MoveToCover : I_Behaviour
 
     public void Execute()
     {
-       
+        if (NMA == null) { NMA = owner.GetComponent<NavMeshAgent>(); }
+        if (targetCover != null) { NMA.destination = targetCover.transform.position; }
+        
     }
 
     public void Start(EnemyAI_Controller newOwner)
     {
-        Debug.Log("Implement move to cover");
+        owner = newOwner;
+        NMA = owner.GetComponent<NavMeshAgent>();
+
+        targetCover = owner.closestCoverObj;
     }
+
 }
