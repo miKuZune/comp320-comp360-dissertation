@@ -35,6 +35,11 @@ public class EnemyAI_Controller : MonoBehaviour {
     I_Behaviour moveToCover;
     I_Behaviour flee;
 
+    BehaviourScore Move_ToPlayer_BS;
+    BehaviourScore ShootAtPlayer_BS;
+    BehaviourScore MoveToCover_BS;
+    BehaviourScore Flee_BS;
+
     I_Behaviour idle;
     
     I_Behaviour currentBehaviour;                                   // Store the current behaviour that should be exhibited.
@@ -57,9 +62,16 @@ public class EnemyAI_Controller : MonoBehaviour {
 
         // Create behaviour objects.
         Move_ToPlayer = new MoveToPlayer();
+        Move_ToPlayer_BS = new BehaviourScore(Move_ToPlayer);
+
         ShootAtPlayer = new ShootAtPlayer();
+        ShootAtPlayer_BS = new BehaviourScore(ShootAtPlayer);
+
         moveToCover = new MoveToCover();
+        MoveToCover_BS = new BehaviourScore(moveToCover);
+
         flee = new Flee();
+        Flee_BS = new BehaviourScore(flee);
 
         idle = new Idle();
 
@@ -83,85 +95,34 @@ public class EnemyAI_Controller : MonoBehaviour {
 
         }
 
+        CalcMoveToPlayerScore();
+
         reEvaluationTimer -= Time.deltaTime;
 	}
 
     void ReEvaluateBehaviour()
     {
+        Move_ToPlayer_BS.score = CalcMoveToPlayerScore();
+        MoveToCover_BS.score = CalcMoveToCoverScore();
+        ShootAtPlayer_BS.score = CalcShootScore();
+        Flee_BS.score = CalcFleeScore();
 
-        if (!EvaluateAI_Health()) { return; }
-        if (!EvaluatePlayerHealth()) { return; }
-        if (!EvaluateDistToPlayer()) { return; }
-        if (!EvaluateDistToCover()) { return; }
+        List<BehaviourScore> BScores = new List<BehaviourScore>{Move_ToPlayer_BS, MoveToCover_BS, ShootAtPlayer_BS, Flee_BS};
 
-        Debug.Log("void zone in controller vairables - deafulting to move to player");
-        ChangeBehaviour(Move_ToPlayer);
-    }
+        BehaviourScore highestScorer = null;
 
-    bool EvaluateAI_Health()
-    {
-        int h = GetAI_HealthPercent();
-
-        if(h < healthToFleePercent)
+        foreach(BehaviourScore behaviourS in BScores)
         {
-            ChangeBehaviour(flee);
-            return false;
+            if (highestScorer == null) { highestScorer = behaviourS; }
+            else if(behaviourS.score > highestScorer.score){highestScorer = behaviourS;}
         }
 
-        return true;
-    }
+        Debug.Log(highestScorer.behaviour);
 
-    bool EvaluatePlayerHealth()
-    {
-        int h = GetPlayer_HealthPercent();
-
-        if(h < shootAtPlayerHealthPercent)
+        if(currentBehaviour != highestScorer.behaviour)
         {
-            ChangeBehaviour(ShootAtPlayer);
-            return false;
+            ChangeBehaviour(highestScorer.behaviour);
         }
-
-        return true;
-    }
-
-    bool EvaluateDistToCover()
-    {
-        float distance = CalculateDistanceToCover();
-        if(distance < moveToCoverDistMax && distance > moveToCoverDistMin)
-        {
-            ChangeBehaviour(moveToCover);
-            return false;
-        }
-        else if(distance < moveToCoverDistMin)
-        {
-            ChangeBehaviour(ShootAtPlayer);
-            return false;
-        }
-
-        return true;
-    }
-
-    bool EvaluateDistToPlayer()
-    {
-        float distance = CalculateDistanceToPlayer();
-
-        if(distance < maxPlayerDistToShoot && distance > minPlayerDistToShoot)
-        {
-            ChangeBehaviour(ShootAtPlayer);
-            return false;
-        }else if(distance < minPlayerDistToShoot)
-        {
-            ChangeBehaviour(moveToCover);
-            return false;
-        }
-        else if(distance > maxPlayerDistToShoot)
-        {
-            ChangeBehaviour(Move_ToPlayer);
-            return false;
-        }
-
-
-        return true;
     }
 
     public void Shoot()
@@ -187,54 +148,98 @@ public class EnemyAI_Controller : MonoBehaviour {
         bull.SetTarget(target);                                                              // Set the target of the new bullet.
     }
 
-    float CalculateDistanceToPlayer()
+    int CalcMoveToPlayerScore()
     {
-        if (player == null) { player = GameObject.FindGameObjectWithTag("Player"); }            // Checks if this script has a reference to the player gameobject. If not finds the reference.
+        int score = 0;
 
-        float distance = Vector3.Distance(transform.position, player.transform.position);       // Use Vector3's distance function to get the distance beetween the two objects.
+        // Check if the AI can "see" the player.
+        if (player == null) { player = GameObject.FindGameObjectWithTag("Player"); }
+        Vector3 dir = player.transform.position - transform.position;
+        RaycastHit hit;
+        if(Physics.Raycast(transform.position, dir, out hit))
+        {
+            if(hit.transform.tag != "Player")
+            {
+                score = 125;
+            }
+            else
+            {
+                score = (int)hit.distance;
+            }
+        }
 
-        return distance;
+
+        return score;
     }
 
-    float CalculateDistanceToCover()
+    int CalcMoveToCoverScore()
     {
-        float distance = Mathf.Infinity;
+        int score = 0;
 
-        GameObject[] coverSpots = GameManager.instance.CoverObjs;
-
-        foreach (GameObject cover in coverSpots)
+        // Find the distance to the nearest cover gameobject in the scene.
+        float nearestDist = Mathf.Infinity;
+        foreach(GameObject cover in GameManager.instance.CoverObjs)                                     // A list of all cover objects is stored in the gamemanager script. 
         {
-            float dist = Vector3.Distance(cover.transform.position, transform.position);
-            if (dist < distance)
+            float dist = Vector3.Distance(transform.position, cover.transform.position);
+            if(dist < nearestDist)
             {
-                distance = dist;
+                nearestDist = dist;
                 closestCoverObj = cover;
             }
         }
 
-        if (closestCoverObj == null) { closestCoverObj = coverSpots[0]; }
+        if (nearestDist < 50 && nearestDist > 5) { score = 50; }
 
-        return distance;
+
+        return score;
     }
 
-    int GetAI_HealthPercent()
+    int CalcShootScore()
     {
-        int currhealth = GetComponent<Health>().currHealth;                                     // Access the AI's instance of the Health script and get the current health variable.
-        int maxHealth = GetComponent<Health>().maxHealth;
+        int score = 0;
 
-        float healthPercent = ((float)currhealth / (float)maxHealth) * 100 ;
+        if (player == null) { player = GameObject.FindGameObjectWithTag("Player"); }
 
-        return (int)healthPercent;
+        Health playerH = player.GetComponent<Health>();
+
+        float healthPercent = (float)playerH.currHealth / (float)playerH.maxHealth;
+
+        if (healthPercent < 0.2) { score = 110; }
+        else
+        {
+            float distToPlayer = Vector3.Distance(this.transform.position, player.transform.position);
+            score = 100 - (int)distToPlayer;
+        }
+
+
+        return score;
     }
 
-    int GetPlayer_HealthPercent()
+    int CalcFleeScore()
     {
-        if (player == null) { player = GameObject.FindGameObjectWithTag("Player"); }        // Checks if this script has a reference to the player gameobject. If not finds the reference.
-        int CurrHealth = player.GetComponent<Health>().currHealth;                              // Access the player's instance of Health and get the current health variable.
-        int maxHealth = player.GetComponent<Health>().maxHealth;
+        int score = 0;
 
-        float healthPercent = ((float)CurrHealth / (float)maxHealth) * 100;
+        Health h = GetComponent<Health>();
 
-        return (int)healthPercent;
+        float healthPercent = (float)h.currHealth / (float)h.maxHealth;
+
+        if (healthPercent < 0.2) { score = 150; }
+
+
+        return score;
+    }
+
+
+
+}
+
+class BehaviourScore
+{
+    public I_Behaviour behaviour;
+    public int score;
+
+    public BehaviourScore(I_Behaviour behaviour)
+    {
+        this.behaviour = behaviour;
     }
 }
