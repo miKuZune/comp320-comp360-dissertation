@@ -10,6 +10,7 @@ public interface I_Gun
     float FireRate { get; set; }
     int Damage { get; set; }
     float Accuracy { get; set; }
+    string Gun_Name { get; set; }
 
     void Shoot(Vector3 shootFromPoint, Vector3 direction);
     void DealDamage(GameObject enemy);

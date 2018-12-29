@@ -20,7 +20,6 @@ public class ShootAtPlayer : I_Behaviour
 
     public void Execute()
     {
-
         if (timeToShoot < 0) { Shoot(); }
         
         // Make the AI look at the player.

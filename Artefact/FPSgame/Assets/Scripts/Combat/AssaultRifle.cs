@@ -6,6 +6,7 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
     // Local Variable declartion.
     public int maxAmmo, currentAmmo, damage;
     public float reloadTime, fireRate, accuracy;
+    public string G_Name;
     // I_Gun gets and sets. Convert the interface properties to usable variables.
     public int MaxAmmo
     {
@@ -37,9 +38,15 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
         get { return accuracy; }
         set { accuracy = value; }
     }
+    public string Gun_Name
+    {
+        get { return G_Name; }
+        set { G_Name = value; }
+    }
+
 
     // Constructor
-    public AssaultRifle(int maxAmmo, int damage, float reloadTime, float fireRate, float accuracy)
+    public AssaultRifle(int maxAmmo, int damage, float reloadTime, float fireRate, float accuracy, string name)
     {
         this.maxAmmo = maxAmmo;
         this.currentAmmo = maxAmmo;
@@ -47,6 +54,7 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
         this.reloadTime = reloadTime;
         this.fireRate = fireRate;
         this.accuracy = accuracy;
+        this.G_Name = name;
     }
 
     public void Shoot(Vector3 startPoint, Vector3 direction)

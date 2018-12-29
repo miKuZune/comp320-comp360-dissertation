@@ -21,14 +21,6 @@ public class EnemyAI_Controller : MonoBehaviour {
     [HideInInspector]
     public GameObject closestCoverObj;
 
-    // AI behaviour evaluation variables
-    float healthToFleePercent = 20;
-    float shootAtPlayerHealthPercent = 20;
-    float moveToCoverDistMin = 2.5f;
-    float moveToCoverDistMax = 20;
-    float minPlayerDistToShoot = 5;
-    float maxPlayerDistToShoot = 25;
-
     // List of all posible behaviours.
     I_Behaviour Move_ToPlayer;
     I_Behaviour ShootAtPlayer;
@@ -144,7 +136,6 @@ public class EnemyAI_Controller : MonoBehaviour {
         target.y += rand.Next((int)-gunBloom.y, (int)gunBloom.y);
         target.z += rand.Next((int)-gunBloom.z, (int)gunBloom.z);
 
-
         bull.SetTarget(target);                                                              // Set the target of the new bullet.
     }
 
@@ -190,7 +181,6 @@ public class EnemyAI_Controller : MonoBehaviour {
 
         if (nearestDist < 50 && nearestDist > 5) { score = 50; }
 
-
         return score;
     }
 
@@ -229,6 +219,18 @@ public class EnemyAI_Controller : MonoBehaviour {
         return score;
     }
 
+    public void OnDeath()
+    {
+        float AI_PlayerDist = Vector3.Distance(transform.position, player.transform.position);
+        string killGunName = player.GetComponent<Gun_Manager>().currentGun.Gun_Name;
+        Debug.Log(killGunName);
+
+    }
+
+    public void OnDamage()
+    {
+        
+    }
 
 
 }
