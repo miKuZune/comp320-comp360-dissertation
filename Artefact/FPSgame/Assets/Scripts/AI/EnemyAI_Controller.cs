@@ -38,7 +38,9 @@ public class EnemyAI_Controller : MonoBehaviour {
 
     float timer;
 
-
+    // Data collection variables.
+    bool hasBeenShot = false;
+    float timeSinceFirstShot;
 
     void ChangeBehaviour(I_Behaviour newBehaviour)
     {
@@ -46,7 +48,6 @@ public class EnemyAI_Controller : MonoBehaviour {
 
         currentBehaviour = newBehaviour;
         currentBehaviour.Start(this);
-        Debug.Log(currentBehaviour);
     }
 
 	// Use this for initialization
@@ -76,6 +77,8 @@ public class EnemyAI_Controller : MonoBehaviour {
     {
         if(currentBehaviour != null) { currentBehaviour.Execute(); }                        // Run the code of the Execute function of the currently loaded behaviour.
 
+        if (hasBeenShot) { timeSinceFirstShot += Time.deltaTime; }
+
         if (reEvaluationTimer < 0)
         {
             ReEvaluateBehaviour();
@@ -84,7 +87,6 @@ public class EnemyAI_Controller : MonoBehaviour {
             int min = (int)minReEvaluationTime;
             int max = (int)maxReEvaluationTimer;
             reEvaluationTimer = rand.Next(min, max);
-
         }
 
         CalcMoveToPlayerScore();
@@ -108,8 +110,6 @@ public class EnemyAI_Controller : MonoBehaviour {
             if (highestScorer == null) { highestScorer = behaviourS; }
             else if(behaviourS.score > highestScorer.score){highestScorer = behaviourS;}
         }
-
-        Debug.Log(highestScorer.behaviour);
 
         if(currentBehaviour != highestScorer.behaviour)
         {
@@ -223,13 +223,14 @@ public class EnemyAI_Controller : MonoBehaviour {
     {
         float AI_PlayerDist = Vector3.Distance(transform.position, player.transform.position);
         string killGunName = player.GetComponent<Gun_Manager>().currentGun.Gun_Name;
-        Debug.Log(killGunName);
 
+
+        DatabaseManager.instance.InsertIntoDB(killGunName, AI_PlayerDist, timeSinceFirstShot);
     }
 
     public void OnDamage()
     {
-        
+        hasBeenShot = true;
     }
 
 
