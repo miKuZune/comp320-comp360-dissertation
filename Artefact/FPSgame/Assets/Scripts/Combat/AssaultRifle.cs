@@ -57,17 +57,21 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
         this.G_Name = name;
     }
 
+    // Handles how the weapon should be shot. 
     public void Shoot(Vector3 startPoint, Vector3 direction)
     {
         if (currentAmmo <= 0) { return; }
+        // Handle if the shot has hit the enemies.
         RaycastHit hit;
         if(Physics.Raycast(startPoint, direction, out hit, Mathf.Infinity))
         {
+            // Handle if it hit the Enemies.
             if(hit.transform.tag == "Enemy")
             {
                 DealDamage(hit.transform.gameObject);
             }
 
+            // Update the amount of ammo.
             currentAmmo--;
             HUD_Manager.instance.UpdateAmmo();
             Gun_Manager.instance.ActivateVFX();
@@ -76,7 +80,6 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
 
     public void DealDamage(GameObject enemy)
     {
-        enemy.GetComponent<Health>().DealDmg(damage);
-        
+        enemy.GetComponent<Health>().DealDmg(damage); 
     }
 }

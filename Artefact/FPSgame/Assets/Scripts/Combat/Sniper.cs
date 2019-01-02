@@ -56,10 +56,11 @@ public class Sniper : MonoBehaviour, I_Gun {
         this.accuracy = accuracy;
         this.G_Name = name;
     }
-
+    // Handle shooting the weapon.
     public void Shoot(Vector3 startPoint, Vector3 direction)
     {
         if (currentAmmo <= 0) { return; }
+        // Check to see what the shot has hit.
         RaycastHit hit;
         if (Physics.Raycast(startPoint, direction, out hit, Mathf.Infinity))
         {
@@ -67,7 +68,7 @@ public class Sniper : MonoBehaviour, I_Gun {
             {
                 DealDamage(hit.transform.gameObject);
             }
-
+            // Take ammo.
             currentAmmo--;
             HUD_Manager.instance.UpdateAmmo();
             Gun_Manager.instance.ActivateVFX();

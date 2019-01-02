@@ -20,6 +20,8 @@ public class Gun_Manager : MonoBehaviour {
     bool reloading = false;                                                                           
     float reloadTimer;                                                  // Counts the time the player has spent reloading their gun.
 
+    bool isActive = true;
+
     // Stores the values used for each of the guns. 
     [Header("AssaultRifleStats")]
     public int AR_MaxAmmo;
@@ -100,6 +102,7 @@ public class Gun_Manager : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
+        if (!isActive) { return; }
         // Handle reloading the gun.
         if (reloading)
         {
@@ -142,6 +145,11 @@ public class Gun_Manager : MonoBehaviour {
 
         timeSinceLastShot += Time.deltaTime;                                                // Add to the time since the player last shot.
 	}
+
+    public void SetInactive()
+    {
+        isActive = false;
+    }
 
     // Play the particle effects for the current gun that is being used.
     public void ActivateVFX()

@@ -19,13 +19,13 @@ public class MoveToCover : I_Behaviour
 
     public void Execute()
     {
-        if (NMA == null) { NMA = owner.GetComponent<NavMeshAgent>(); }
-        if (targetCover != null) { NMA.destination = targetCover.transform.position; }
-        
+        if (NMA == null) { NMA = owner.GetComponent<NavMeshAgent>(); }                              // Ensure their is a reference to the NavMeshAgent.
+        if (targetCover != null) { NMA.destination = targetCover.transform.position; }              // Set the destination of the AI.
     }
 
     public void Start(EnemyAI_Controller newOwner)
     {
+        // Get Necessary componenets.
         owner = newOwner;
         NMA = owner.GetComponent<NavMeshAgent>();
 

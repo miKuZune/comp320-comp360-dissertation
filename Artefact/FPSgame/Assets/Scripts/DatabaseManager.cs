@@ -7,21 +7,21 @@ using Mono.Data.Sqlite;
 
 public class DatabaseManager : MonoBehaviour
 {
-    public bool stopInsertion = false;
+    public bool stopInsertion = false;                                                                  // Used to stop this script from entering data to the DB. Useful for testing game systems without messing with data.
 
     public static DatabaseManager instance;                                                             // Store a singleton reference to this script.
 
     private string connectionString;                                                                    // Stores the path to the storage location of the database.
 
-    const string EventsTable = "Events";
+    const string EventsTable = "Events";                                                                // Stores the name of the table used to store the data.
 
-    int currSessionID;
+    int currSessionID;                                                                                  // Stores a sessionID value to uniquley identfy the set of data created in one play session.
 
-    List<EventTableData> EventData = new List<EventTableData>();
+    List<EventTableData> EventData = new List<EventTableData>();                                        // Stores the list of previous data from the database.
 
     void Awake()
     {
-        // Ensure there is only one instance of this script.
+        // Ensures there is only one instance of this script.
         if (instance == null) { instance = this; }
         else { Destroy(this.gameObject); }
     }
@@ -33,6 +33,7 @@ public class DatabaseManager : MonoBehaviour
         ReadDB();                                                                                       // Store the list of data from the events database.
 
         currSessionID = GetHighestSessionID() + 1;                                                      // Create a new sessionID by getting the highest sessionID and adding one.
+        CreateTable();
     }
 
     // Get the highest value for SessionID from the event table data.
@@ -95,8 +96,25 @@ public class DatabaseManager : MonoBehaviour
 
         // Close connections
         dbConn.Close();
+    }
 
-        Debug.Log("Data inserted");
+    // Creates the table to store the data in.
+    void CreateTable()
+    {
+        // Connect to the database.
+        IDbConnection dbConn = new SqliteConnection(connectionString);
+        dbConn.Open();
+
+        // Setup and execute the command to create the table.
+        string SQL_Comm = "CREATE TABLE " + EventsTable +"(EventID int,SessionID int,KillWeapon string,Distance float,TimeToKill); ";           // SQL command to create the table.
+        IDbCommand comm = dbConn.CreateCommand();                                                                                               // Create a command object to execute the SQL.
+        comm.CommandText = SQL_Comm;                                                                                                            // Give the command obj the SQL command.
+        comm.ExecuteNonQuery();                                                                                                                 // Execute the command.
+
+        // Close connection to the database.
+        dbConn.Close();
+        // Output that the database has been created. Only seen in Unity Editor and output logs.
+        Debug.Log("Table created");
     }
 }
 

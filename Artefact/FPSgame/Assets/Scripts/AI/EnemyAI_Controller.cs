@@ -5,21 +5,26 @@ using UnityEngine.AI;
 
 public class EnemyAI_Controller : MonoBehaviour {
 
-    public float moveSpeed;
+    public float moveSpeed;                    // Stores the distance per second the AI can travel.
 
+    // Values for the timer to dictate how long the AI takes between shots when in the shooting behaviour.
     public float minTimeBetweenShot;
     public float maxTimeBetweenShot;
 
-    public float minReEvaluationTime = 1.5f;
-    public float maxReEvaluationTimer = 5;
+    // Values for the timer which allows the AI to re-evaluate and choose a new behaviour.
+    [SerializeField]
+    float minReEvaluationTime = 1.5f;
+    [SerializeField]
+    float maxReEvaluationTimer = 5;
     float reEvaluationTimer;
 
-    public Vector3 gunBloom;
+    [SerializeField]
+    Vector3 gunBloom;           // Chooses the amount of variation in the direction of the AI's shots.
 
-    GameObject player;
+    GameObject player;          // Stores a reference to the player.
 
     [HideInInspector]
-    public GameObject closestCoverObj;
+    public GameObject closestCoverObj;      // Stores the closest gameobject that is tagged as being cover.
 
     // List of all posible behaviours.
     I_Behaviour Move_ToPlayer;
@@ -31,8 +36,6 @@ public class EnemyAI_Controller : MonoBehaviour {
     BehaviourScore ShootAtPlayer_BS;
     BehaviourScore MoveToCover_BS;
     BehaviourScore Flee_BS;
-
-    I_Behaviour idle;
     
     I_Behaviour currentBehaviour;                                   // Store the current behaviour that should be exhibited.
 
@@ -42,31 +45,26 @@ public class EnemyAI_Controller : MonoBehaviour {
     bool hasBeenShot = false;
     float timeSinceFirstShot;
 
+    // Changes the current behaviour to a new behaviour.
     void ChangeBehaviour(I_Behaviour newBehaviour)
     {
-        if (currentBehaviour != null) { currentBehaviour.End(); }
+        if (currentBehaviour != null) { currentBehaviour.End(); }               // Run the Ending code of the behaviour.
 
-        currentBehaviour = newBehaviour;
-        currentBehaviour.Start(this);
+        currentBehaviour = newBehaviour;                                        // Store the new behaviour to exhibit.
+        currentBehaviour.Start(this);                                           // Run the start code for the new behaviour.
     }
 
 	// Use this for initialization
 	void Start () {
 
-        // Create behaviour objects.
-        Move_ToPlayer = new MoveToPlayer();
-        Move_ToPlayer_BS = new BehaviourScore(Move_ToPlayer);
+        // Create behaviour objects and Behaviour score objects.
+        Move_ToPlayer_BS = new BehaviourScore(new MoveToPlayer());
 
-        ShootAtPlayer = new ShootAtPlayer();
-        ShootAtPlayer_BS = new BehaviourScore(ShootAtPlayer);
+        ShootAtPlayer_BS = new BehaviourScore(new ShootAtPlayer());
 
-        moveToCover = new MoveToCover();
-        MoveToCover_BS = new BehaviourScore(moveToCover);
+        MoveToCover_BS = new BehaviourScore(new MoveToCover());
 
-        flee = new Flee();
-        Flee_BS = new BehaviourScore(flee);
-
-        idle = new Idle();
+        Flee_BS = new BehaviourScore(new Flee());
 
         GetComponent<NavMeshAgent>().speed = moveSpeed;                                     // Set Unit's per second the AI can travel.
 
@@ -77,44 +75,44 @@ public class EnemyAI_Controller : MonoBehaviour {
     {
         if(currentBehaviour != null) { currentBehaviour.Execute(); }                        // Run the code of the Execute function of the currently loaded behaviour.
 
-        if (hasBeenShot) { timeSinceFirstShot += Time.deltaTime; }
+        if (hasBeenShot) { timeSinceFirstShot += Time.deltaTime; }                          // Counts the time between first being shot and being killed. Used in the events database.
 
+        // See if the AI should re-evaluate their behaviour.
         if (reEvaluationTimer < 0)
         {
             ReEvaluateBehaviour();
 
+            // Get a new random time after which the AI will re-evaluate again.
             System.Random rand = new System.Random();
             int min = (int)minReEvaluationTime;
             int max = (int)maxReEvaluationTimer;
             reEvaluationTimer = rand.Next(min, max);
         }
 
-        CalcMoveToPlayerScore();
-
         reEvaluationTimer -= Time.deltaTime;
 	}
 
     void ReEvaluateBehaviour()
     {
+        // Get a score for each behaviour that the AI could be exhibiting.
         Move_ToPlayer_BS.score = CalcMoveToPlayerScore();
         MoveToCover_BS.score = CalcMoveToCoverScore();
         ShootAtPlayer_BS.score = CalcShootScore();
         Flee_BS.score = CalcFleeScore();
 
+        // Store the list of Behaviours and scores.
         List<BehaviourScore> BScores = new List<BehaviourScore>{Move_ToPlayer_BS, MoveToCover_BS, ShootAtPlayer_BS, Flee_BS};
 
+        // Get the highest scoring behaviour.
         BehaviourScore highestScorer = null;
 
         foreach(BehaviourScore behaviourS in BScores)
         {
-            if (highestScorer == null) { highestScorer = behaviourS; }
-            else if(behaviourS.score > highestScorer.score){highestScorer = behaviourS;}
+            if (highestScorer == null) { highestScorer = behaviourS; }          // Checks if there is not already a set behaviour and sets one.
+            else if(behaviourS.score > highestScorer.score){highestScorer = behaviourS;}        // Checks if the score of the current behaviour is higher than the current highest.
         }
 
-        if(currentBehaviour != highestScorer.behaviour)
-        {
-            ChangeBehaviour(highestScorer.behaviour);
-        }
+        if(currentBehaviour != highestScorer.behaviour){ChangeBehaviour(highestScorer.behaviour);}      // Only change behaviour if the highest scorer is different to the current behaviour.
     }
 
     public void Shoot()
@@ -155,10 +153,9 @@ public class EnemyAI_Controller : MonoBehaviour {
             }
             else
             {
-                score = (int)hit.distance;
+                score = (int)hit.distance;                          // Set the score to the distance between the player and the AI.
             }
         }
-
 
         return score;
     }
@@ -188,20 +185,19 @@ public class EnemyAI_Controller : MonoBehaviour {
     {
         int score = 0;
 
+        // Check the player's health.
         if (player == null) { player = GameObject.FindGameObjectWithTag("Player"); }
 
         Health playerH = player.GetComponent<Health>();
 
         float healthPercent = (float)playerH.currHealth / (float)playerH.maxHealth;
 
-        if (healthPercent < 0.2) { score = 110; }
+        if (healthPercent < 0.2) { score = 110; }               // Set score when the player's health is below a certain point.
         else
         {
-            float distToPlayer = Vector3.Distance(this.transform.position, player.transform.position);
+            float distToPlayer = Vector3.Distance(this.transform.position, player.transform.position);      // Else set the score to a value - the distance between them.
             score = 100 - (int)distToPlayer;
         }
-
-
         return score;
     }
 
@@ -211,37 +207,38 @@ public class EnemyAI_Controller : MonoBehaviour {
 
         Health h = GetComponent<Health>();
 
-        float healthPercent = (float)h.currHealth / (float)h.maxHealth;
+        float healthPercent = (float)h.currHealth / (float)h.maxHealth;             // Get AI health as a percentage.
 
-        if (healthPercent < 0.2) { score = 150; }
-
+        if (healthPercent < 0.2) { score = 150; }                                   // Set score if it is below a threshold.
 
         return score;
     }
 
+    // Handle the death of an AI.
     public void OnDeath()
     {
+        // Get variables to be stored in the database.
         float AI_PlayerDist = Vector3.Distance(transform.position, player.transform.position);
         string killGunName = player.GetComponent<Gun_Manager>().currentGun.Gun_Name;
-
-
+        // Store the data in the database.
         DatabaseManager.instance.InsertIntoDB(killGunName, AI_PlayerDist, timeSinceFirstShot);
+        // Tell the gamemanager that an enemy has been killed so it can handle the rounds.
         GameManager.instance.IncrementEnemiesKilled();
     }
 
+    // Handle taking damage.
     public void OnDamage()
     {
         hasBeenShot = true;
     }
-
-
 }
 
 class BehaviourScore
 {
-    public I_Behaviour behaviour;
-    public int score;
+    public I_Behaviour behaviour;       // Store the behaviour.
+    public int score;                   // Store the score when it is re-evaluated.
 
+    // Constructor.
     public BehaviourScore(I_Behaviour behaviour)
     {
         this.behaviour = behaviour;

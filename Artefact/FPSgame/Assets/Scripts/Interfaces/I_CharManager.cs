@@ -4,6 +4,6 @@ using UnityEngine;
 
 public interface I_CharManager
 {
-    void OnDeath();
-    void OnDmg();
+    void OnDeath();                     // Called when a unit's health value reaches 0 or less.
+    void OnDmg();                       // Called anytime a unit's health is lowered.
 }

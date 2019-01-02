@@ -44,35 +44,36 @@ public class HUD_Manager : MonoBehaviour {
         healthText.text = "Health : " + h.currHealth + "/" + h.maxHealth;                   // Set the health text to the curr health and max health stored.
     }
 
+    // Updates the ammo text displayed to the player, gets the current ammo from the gun manager.
     public void UpdateAmmo()
     {
         if (ammoText == null) { return; }
         ammoText.text = "Ammo: " + Gun_Manager.instance.currentGun.CurrentAmmo + "/" + Gun_Manager.instance.currentGun.MaxAmmo;
     }
-
+    // Updates the ammo text displayed to the player, takes variables instead.
     public void UpdateAmmo(int currAmmo, int maxAmmo)
     {
         if (ammoText == null) { return; }
         ammoText.text = "Ammo: " + currAmmo + "/" + maxAmmo;
     }
 
-
+    // Shows the reload bar to the player.
     public void EnableReload()
     {
         reloadBar.gameObject.SetActive(true);
     }
-
+    // Stops showing the reload bar to the player.
     public void DisableReload()
     {
         reloadBar.gameObject.SetActive(false);
     }
-
+    // Changes the bar to move along the reload bar.
     public void UpdateReloadTime(float reloadTime, float currProgress)
     {
         float score = currProgress / reloadTime;
         reloadBar.size = score;
     }
-
+    // Shows which round the player is in.
     public void UpdateRoundText(int newRoundNum)
     {
         roundText.text = "Round: " + newRoundNum;

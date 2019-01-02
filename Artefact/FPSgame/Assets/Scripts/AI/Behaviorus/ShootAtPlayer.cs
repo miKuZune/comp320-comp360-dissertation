@@ -33,6 +33,7 @@ public class ShootAtPlayer : I_Behaviour
 
     public void Start(EnemyAI_Controller newOwner)
     {
+        // Get necessary references.
         owner = newOwner;
         player = GameObject.Find("Player");
         ownerObj = owner.gameObject;
@@ -40,6 +41,7 @@ public class ShootAtPlayer : I_Behaviour
 
         minShootCooldown = owner.minTimeBetweenShot;
         maxShootCooldown = owner.maxTimeBetweenShot;
+        // Begin the shooting process.
         BeginShootTimer();
     }
 

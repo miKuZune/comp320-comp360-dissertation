@@ -61,14 +61,17 @@ public class Shotgun : MonoBehaviour, I_Gun {
         this.G_Name = name;
     }
 
+    // Handle how the weapon shoots.
     public void Shoot(Vector3 startPoint, Vector3 direction)
     {
         if (currentAmmo <= 0) { return; }
+        // Handle if the shot has hit an enemy.
         RaycastHit hit;
         if (Physics.Raycast(startPoint, direction, out hit, Mathf.Infinity))
         {
             if (hit.transform.tag == "Enemy")
             {
+                // Decrease the damage based on the distance between the enemy and the shot.
                 float dist = Vector3.Distance(startPoint, hit.point);
 
                 calculatedDmg = CalculateDamage(dist);
@@ -76,7 +79,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
                 DealDamage(hit.transform.gameObject);
                 
             }
-
+            // Decrease ammo.
             currentAmmo--;
             HUD_Manager.instance.UpdateAmmo();
             Gun_Manager.instance.ActivateVFX();
@@ -88,7 +91,6 @@ public class Shotgun : MonoBehaviour, I_Gun {
         enemy.GetComponent<Health>().DealDmg((int)calculatedDmg);
 
     }
-
     float CalculateDamage(float dist)
     {
         float dmgtoDeal = damage - ((dist * dist) * dmgFallOffRate);                        // Calculate the damage using a negative power for fall off damage.
