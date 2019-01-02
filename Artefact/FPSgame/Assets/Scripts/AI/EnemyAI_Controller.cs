@@ -226,6 +226,7 @@ public class EnemyAI_Controller : MonoBehaviour {
 
 
         DatabaseManager.instance.InsertIntoDB(killGunName, AI_PlayerDist, timeSinceFirstShot);
+        GameManager.instance.IncrementEnemiesKilled();
     }
 
     public void OnDamage()

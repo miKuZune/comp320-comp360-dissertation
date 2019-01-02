@@ -7,6 +7,8 @@ using Mono.Data.Sqlite;
 
 public class DatabaseManager : MonoBehaviour
 {
+    public bool stopInsertion = false;
+
     public static DatabaseManager instance;                                                             // Store a singleton reference to this script.
 
     private string connectionString;                                                                    // Stores the path to the storage location of the database.
@@ -79,6 +81,7 @@ public class DatabaseManager : MonoBehaviour
 
     public void InsertIntoDB(string killWeapon, float distance, float killTime)
     {
+        if (stopInsertion) { return; }                                                          // Stop any data from being input into the database. Useful to test gameplay features without messing around with the DB.
         // Connect to the database.
         IDbConnection dbConn = new SqliteConnection(connectionString);
         dbConn.Open();
@@ -92,6 +95,8 @@ public class DatabaseManager : MonoBehaviour
 
         // Close connections
         dbConn.Close();
+
+        Debug.Log("Data inserted");
     }
 }
 

@@ -10,6 +10,7 @@ public class HUD_Manager : MonoBehaviour {
     public GameObject HUD;                                                                  // Store the prefab of the Heads Up Display.
     Text healthText;                                                                        // Store a reference to the health text component.
     Text ammoText;                                                                          // Store the text component for ammo.
+    Text roundText;                                                                         // Store teh text compoenent for the round display.
 
     Scrollbar reloadBar;                                                                    // Store a reference to the scroll bar used to represent the progress of the reload.
 
@@ -28,6 +29,7 @@ public class HUD_Manager : MonoBehaviour {
 
         healthText = inGameHUD.transform.Find("HealthPanel").GetComponentInChildren<Text>();    // Get and store the text to display the health to.
         ammoText = inGameHUD.transform.Find("AmmoPanel").GetComponentInChildren<Text>();        // Get and store the text to dispaly the ammo to.
+        roundText = inGameHUD.transform.Find("RoundPanel").GetComponentInChildren<Text>();
 
         reloadBar = inGameHUD.transform.Find("ReloadTime").GetComponent<Scrollbar>();
 
@@ -69,5 +71,10 @@ public class HUD_Manager : MonoBehaviour {
     {
         float score = currProgress / reloadTime;
         reloadBar.size = score;
+    }
+
+    public void UpdateRoundText(int newRoundNum)
+    {
+        roundText.text = "Round: " + newRoundNum;
     }
 }
