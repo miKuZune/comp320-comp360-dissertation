@@ -29,6 +29,7 @@ public class Gun_Manager : MonoBehaviour {
     public float AR_ReloadTimer;
     public float AR_FireRate;
     public float AR_Accuracy;
+    public float AR_HeadShotMultiplier;
     const string AR_name = "Assult Rifle";
 
     [Header("Shotgun stats")]
@@ -37,6 +38,7 @@ public class Gun_Manager : MonoBehaviour {
     public float S_ReloadTimer;
     public float S_FireRate;
     public float S_Accuracy;
+    public float S_HeadShotMultiplier;
     public float damageFallOffRate;                                   // Stores a value used to calculate the shotguns damage in relation to the distance between the player and the AI that has been shot.
     const string S_name = "Shotgun";
 
@@ -46,6 +48,7 @@ public class Gun_Manager : MonoBehaviour {
     public float SN_ReloadTimer;
     public float SN_FireRate;
     public float SN_Accuracy;
+    public float SN_HeadShotMultiplier;
     const string SN_name = "Sniper Rifle";
 
     void Awake()
@@ -59,9 +62,9 @@ public class Gun_Manager : MonoBehaviour {
     {
         cam = Camera.main;                                                                                                          // Get the Camera script on the camera used for the player's vision.
 
-        guns = new I_Gun[] { new AssaultRifle(AR_MaxAmmo, AR_Damage, AR_ReloadTimer, AR_FireRate, AR_Accuracy, AR_name)                      // Create the gun scripts needed for the player to have all avaliable guns.
-                           , new Shotgun(S_MaxAmmo, S_Damage, S_ReloadTimer, S_FireRate, S_Accuracy, damageFallOffRate, S_name)
-                           , new Sniper(SN_MaxAmmo, SN_Damage, SN_ReloadTimer, SN_FireRate, SN_Accuracy, SN_name)};
+        guns = new I_Gun[] { new AssaultRifle(AR_MaxAmmo, AR_Damage, AR_ReloadTimer, AR_FireRate, AR_Accuracy, AR_HeadShotMultiplier, AR_name)                      // Create the gun scripts needed for the player to have all avaliable guns.
+                           , new Shotgun(S_MaxAmmo, S_Damage, S_ReloadTimer, S_FireRate, S_Accuracy, damageFallOffRate, S_HeadShotMultiplier, S_name)
+                           , new Sniper(SN_MaxAmmo, SN_Damage, SN_ReloadTimer, SN_FireRate, SN_Accuracy, SN_HeadShotMultiplier, SN_name)};
 
         foreach(Transform child in transform)                                                                                       // Gets the gun Gameobjects and the Particle systems that are used to represent the guns and the firing of said guns.
         {

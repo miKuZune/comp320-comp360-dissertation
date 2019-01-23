@@ -13,6 +13,6 @@ public interface I_Gun
     string Gun_Name { get; set; }
 
     void Shoot(Vector3 shootFromPoint, Vector3 direction);
-    void DealDamage(GameObject enemy);
+    void DealDamage(GameObject enemy, float multiplier);
 	
 }

@@ -6,7 +6,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
 
     // Local Variable declartion.
     public int maxAmmo, currentAmmo, damage;
-    public float reloadTime, fireRate, accuracy, dmgFallOffRate;
+    public float reloadTime, fireRate, accuracy, dmgFallOffRate, headShotMultiplier;
     public string G_Name;
     // Dynamic variables
     float calculatedDmg;
@@ -49,7 +49,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
     }
 
     // Constructor
-    public Shotgun(int maxAmmo, int damage, float reloadTime, float fireRate, float accuracy, float damageFallOffRate, string name)
+    public Shotgun(int maxAmmo, int damage, float reloadTime, float fireRate, float accuracy, float damageFallOffRate, float headShotMultiplier, string name)
     {
         this.maxAmmo = maxAmmo;
         this.currentAmmo = maxAmmo;
@@ -59,6 +59,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
         this.accuracy = accuracy;
         this.dmgFallOffRate = damageFallOffRate;
         this.G_Name = name;
+        this.headShotMultiplier = headShotMultiplier;
     }
 
     // Handle how the weapon shoots.
@@ -69,15 +70,18 @@ public class Shotgun : MonoBehaviour, I_Gun {
         RaycastHit hit;
         if (Physics.Raycast(startPoint, direction, out hit, Mathf.Infinity))
         {
+            // Decrease the damage based on the distance between the enemy and the shot.
+            float dist = Vector3.Distance(startPoint, hit.point);
+
+            calculatedDmg = CalculateDamage(dist);
             if (hit.transform.tag == "Enemy")
             {
-                // Decrease the damage based on the distance between the enemy and the shot.
-                float dist = Vector3.Distance(startPoint, hit.point);
-
-                calculatedDmg = CalculateDamage(dist);
-
-                DealDamage(hit.transform.gameObject);
+                DealDamage(hit.transform.gameObject, 1);
                 
+            }else if(hit.transform.tag == "Head")
+            {
+                GameObject AI_GO = hit.transform.GetComponent<Head>().AI_main;
+                DealDamage(AI_GO, headShotMultiplier);
             }
             // Decrease ammo.
             currentAmmo--;
@@ -86,9 +90,9 @@ public class Shotgun : MonoBehaviour, I_Gun {
         }
     }
 
-    public void DealDamage(GameObject enemy)
+    public void DealDamage(GameObject enemy, float multiplier)
     {
-        enemy.GetComponent<Health>().DealDmg((int)calculatedDmg);
+        enemy.GetComponent<Health>().DealDmg((int)(calculatedDmg * multiplier));
 
     }
     float CalculateDamage(float dist)

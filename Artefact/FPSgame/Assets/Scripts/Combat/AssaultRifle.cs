@@ -5,7 +5,7 @@ using UnityEngine;
 public class AssaultRifle : MonoBehaviour, I_Gun {
     // Local Variable declartion.
     public int maxAmmo, currentAmmo, damage;
-    public float reloadTime, fireRate, accuracy;
+    public float reloadTime, fireRate, accuracy, headShotMultiplier;
     public string G_Name;
     // I_Gun gets and sets. Convert the interface properties to usable variables.
     public int MaxAmmo
@@ -46,7 +46,7 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
 
 
     // Constructor
-    public AssaultRifle(int maxAmmo, int damage, float reloadTime, float fireRate, float accuracy, string name)
+    public AssaultRifle(int maxAmmo, int damage, float reloadTime, float fireRate, float accuracy, float headShotMultiplier, string name)
     {
         this.maxAmmo = maxAmmo;
         this.currentAmmo = maxAmmo;
@@ -55,6 +55,7 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
         this.fireRate = fireRate;
         this.accuracy = accuracy;
         this.G_Name = name;
+        this.headShotMultiplier = headShotMultiplier;
     }
 
     // Handles how the weapon should be shot. 
@@ -68,7 +69,12 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
             // Handle if it hit the Enemies.
             if(hit.transform.tag == "Enemy")
             {
-                DealDamage(hit.transform.gameObject);
+                DealDamage(hit.transform.gameObject, 1);
+            }else if(hit.transform.tag == "Head")
+            {
+
+                GameObject AI_GO = hit.transform.GetComponent<Head>().AI_main;
+                DealDamage(AI_GO, headShotMultiplier);
             }
 
             // Update the amount of ammo.
@@ -78,8 +84,8 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
         }
     }
 
-    public void DealDamage(GameObject enemy)
+    public void DealDamage(GameObject enemy, float multiplier)
     {
-        enemy.GetComponent<Health>().DealDmg(damage); 
+        enemy.GetComponent<Health>().DealDmg((int)(damage * multiplier)); 
     }
 }
