@@ -93,7 +93,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
     public void DealDamage(GameObject enemy, float multiplier)
     {
         enemy.GetComponent<Health>().DealDmg((int)(calculatedDmg * multiplier));
-
+        HUD_Manager.instance.EnableHitMarker();
     }
     float CalculateDamage(float dist)
     {

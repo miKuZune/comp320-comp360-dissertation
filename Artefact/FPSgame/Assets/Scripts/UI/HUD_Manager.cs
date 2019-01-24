@@ -11,10 +11,15 @@ public class HUD_Manager : MonoBehaviour {
     Text healthText;                                                                        // Store a reference to the health text component.
     Text ammoText;                                                                          // Store the text component for ammo.
     Text roundText;                                                                         // Store teh text compoenent for the round display.
+    RawImage hitMarker;
+
 
     Scrollbar reloadBar;                                                                    // Store a reference to the scroll bar used to represent the progress of the reload.
 
     GameObject inGameHUD;                                                                   // Store a reference to the HUD that is in the game scene.
+
+    float hitMarkerActiveTimer;
+    public float maxHitMarkActiveTimer = 0.125f;
 
     void Awake()
     {
@@ -30,6 +35,9 @@ public class HUD_Manager : MonoBehaviour {
         healthText = inGameHUD.transform.Find("HealthPanel").GetComponentInChildren<Text>();    // Get and store the text to display the health to.
         ammoText = inGameHUD.transform.Find("AmmoPanel").GetComponentInChildren<Text>();        // Get and store the text to dispaly the ammo to.
         roundText = inGameHUD.transform.Find("RoundPanel").GetComponentInChildren<Text>();
+        hitMarker = inGameHUD.transform.Find("HitMarker").GetComponent<RawImage>();
+        hitMarker.enabled = false;
+        Debug.Log(hitMarker);
 
         reloadBar = inGameHUD.transform.Find("ReloadTime").GetComponent<Scrollbar>();
 
@@ -37,6 +45,19 @@ public class HUD_Manager : MonoBehaviour {
 
         UpdateHealth();
 	}
+
+    public void Update()
+    {
+        if(hitMarker.enabled)
+        {
+            hitMarkerActiveTimer += Time.deltaTime;
+
+            if (hitMarkerActiveTimer > maxHitMarkActiveTimer)
+            {
+                hitMarker.enabled = false;
+            }
+        }  
+    }
 
     public void UpdateHealth()
     {
@@ -77,5 +98,11 @@ public class HUD_Manager : MonoBehaviour {
     public void UpdateRoundText(int newRoundNum)
     {
         roundText.text = "Round: " + newRoundNum;
+    }
+
+    public void EnableHitMarker()
+    {
+        hitMarker.enabled = true;
+        hitMarkerActiveTimer = 0;
     }
 }

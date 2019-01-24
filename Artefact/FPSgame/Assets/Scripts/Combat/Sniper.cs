@@ -83,5 +83,6 @@ public class Sniper : MonoBehaviour, I_Gun {
     public void DealDamage(GameObject enemy, float multiplier)
     {
         enemy.GetComponent<Health>().DealDmg((int)(damage * multiplier));
+        HUD_Manager.instance.EnableHitMarker();
     }
 }
