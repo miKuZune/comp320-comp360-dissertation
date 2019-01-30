@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour {
     public static GameManager instance;                                                     // Used to make a singleton instance of this object.
 
     public GameObject[] CoverObjs { get; set; }                                             // Stores a list of all Gameobjects that can be used as cover in the game.
-        
+    [HideInInspector]    
     public GameObject[] SpawnLocations;                                                     // Stores a list of all possible spawn locations that the Enemy AI can spawn from.
 
     GameObject EnemyPrefab;                                                                 // Stores the prefab containing the enemy AI.
@@ -29,6 +29,11 @@ public class GameManager : MonoBehaviour {
     int enemiesInRound;                                                                     // Stores the total number of enemies the player needs to kill to get to the next round.
     int currActiveEnemies;                                                                  // Stores the current number of enemies in the scene.
     int enemiesKilledInRound;                                                               // Stores the enemies that have been killed so far in the round.
+
+    [SerializeField]
+    int randSpawnOffsetMin;
+    [SerializeField]
+    int randSpawnOffsetMax;
 
     void Awake()
     {
@@ -97,11 +102,16 @@ public class GameManager : MonoBehaviour {
         }
 
         // Pick a random number between 0 and the length of the list of potential spawn points.
-        System.Random rand = new System.Random();
+        System.Random rand = new System.Random((int)(Time.time * 1000));
         int randNum = rand.Next(0, potentialSpawns.Count);
-        
-        // Return the vec3 position of the spawn point randomly chosen.
-        return potentialSpawns[randNum].transform.position;
+
+        // Add extra randomisation to the spawn points so enemies do not spawn ontop of each other.
+        Vector3 extraRandomisation = potentialSpawns[randNum].transform.position;
+        extraRandomisation.x += rand.Next(randSpawnOffsetMin, randSpawnOffsetMax);
+        extraRandomisation.z += rand.Next(randSpawnOffsetMin, randSpawnOffsetMax);
+
+        // Return the vec3 position of the spawn point randomly chosen, with some extra randomisation added.
+        return extraRandomisation;
     }
     // Handle the changing of numbers when an enemy is killed.
     public void IncrementEnemiesKilled()
