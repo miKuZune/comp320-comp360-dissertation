@@ -36,6 +36,8 @@ public class EnemyAI_Controller : MonoBehaviour {
     BehaviourScore ShootAtPlayer_BS;
     BehaviourScore MoveToCover_BS;
     BehaviourScore Flee_BS;
+
+    GameObject bulletOriginPoint;
     
     I_Behaviour currentBehaviour;                                   // Store the current behaviour that should be exhibited.
 
@@ -68,6 +70,8 @@ public class EnemyAI_Controller : MonoBehaviour {
 
         GetComponent<NavMeshAgent>().speed = moveSpeed;                                     // Set Unit's per second the AI can travel.
 
+        bulletOriginPoint = transform.Find("BulletSpawn").gameObject;
+        Debug.Log(bulletOriginPoint);
 	}
 	
 	// Update is called once per frame
@@ -119,7 +123,7 @@ public class EnemyAI_Controller : MonoBehaviour {
     {
         GameObject bullet;            
         
-        bullet =  Instantiate((GameObject)Resources.Load("Bullet"), transform);             // Load the bullet prefab from the resources folder and create a new instance of it within the game world.
+        bullet =  Instantiate((GameObject)Resources.Load("Bullet"), bulletOriginPoint.transform.position, Quaternion.identity);             // Load the bullet prefab from the resources folder and create a new instance of it within the game world.
         bullet.transform.parent = null;
 
         Bullet bull = bullet.GetComponent<Bullet>();                                        // Store a reference to the new gameobjects bullet script.
