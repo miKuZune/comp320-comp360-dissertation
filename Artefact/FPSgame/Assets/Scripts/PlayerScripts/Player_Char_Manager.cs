@@ -12,7 +12,8 @@ public class Player_Char_Manager : MonoBehaviour , I_CharManager{
         Gun_Manager.instance.SetInactive();         // Stop the player from shooting.
         GameManager.instance.ToggleMouse();         // Show the mouse.
         Instantiate(Resources.Load("DeathScreen"), Vector3.zero, Quaternion.identity);          // Bring up the death screen.
-        
+
+        DatabaseManager.instance.InsertAllData();
     }
 
     public void OnDmg()

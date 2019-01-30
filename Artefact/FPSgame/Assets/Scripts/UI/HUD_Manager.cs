@@ -37,7 +37,6 @@ public class HUD_Manager : MonoBehaviour {
         roundText = inGameHUD.transform.Find("RoundPanel").GetComponentInChildren<Text>();
         hitMarker = inGameHUD.transform.Find("HitMarker").GetComponent<RawImage>();
         hitMarker.enabled = false;
-        Debug.Log(hitMarker);
 
         reloadBar = inGameHUD.transform.Find("ReloadTime").GetComponent<Scrollbar>();
 

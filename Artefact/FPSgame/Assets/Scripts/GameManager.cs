@@ -13,11 +13,9 @@ public class GameManager : MonoBehaviour {
     GameObject EnemyPrefab;                                                                 // Stores the prefab containing the enemy AI.
     GameObject player;                                                                      // Stores a refernce to the player.
 
-    [SerializeField]            // Enables a field in the inspector without making it open to all other scripts.
-    float minDistToEnableSpawn = 8.5f;                                                      // Stores the minimum distance between a spawn point and the player to allow the spawn point to spawn enemies.
-
+    [Header("Round settings")]
     // Design stuff for rounds.
-    [SerializeField]
+    [SerializeField]                    // Enables a field in the inspector without making it open to all other scripts.
     int startEnemyNum = 1;                                                                  // Stores the base number of enemies that will spawn in round 0.
     [SerializeField]
     int enemyIncreasePerRound = 2;                                                          // Adds to the amount of enemies the player has to fight each round.
@@ -30,6 +28,10 @@ public class GameManager : MonoBehaviour {
     int currActiveEnemies;                                                                  // Stores the current number of enemies in the scene.
     int enemiesKilledInRound;                                                               // Stores the enemies that have been killed so far in the round.
 
+
+    [Header("Spawner settings")]
+    [SerializeField]            
+    float minDistToEnableSpawn = 8.5f;                                                      // Stores the minimum distance between a spawn point and the player to allow the spawn point to spawn enemies.
     [SerializeField]
     int randSpawnOffsetMin;
     [SerializeField]
@@ -73,6 +75,7 @@ public class GameManager : MonoBehaviour {
         currActiveEnemies = 0;
         // Tell the player they are now in a new round.
         HUD_Manager.instance.UpdateRoundText(roundNum);
+        DatabaseManager.instance.currSessionData.endRound++;
     }
     // Check if a new enemy needs to be created in the scene.
     bool NeedToSpawnEnemy()

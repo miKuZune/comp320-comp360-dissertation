@@ -7,6 +7,8 @@ public class Health : MonoBehaviour {
     public int maxHealth;                                       // Stores the maximum health of the Unit.
     public int currHealth { get; set; }                         // Stores the current health of the Unit.
 
+    bool isDead = false;
+
     EnemyAI_Controller AI_Controller;                           // Store a referecne to an AI controller if this instance of Health belongs to an AI.
 
     I_CharManager charManager;                                  // Store a reference to the character manager.
@@ -23,6 +25,7 @@ public class Health : MonoBehaviour {
     // Take health away from the Unit.
     public void DealDmg(int dmg)
     {
+        if (isDead) { return; }
         // Take the health away.
         currHealth -= dmg;
 
@@ -38,6 +41,7 @@ public class Health : MonoBehaviour {
     {
         if(currHealth <= 0)
         {
+            isDead = true;
             // Handle the Unit's death.
             currHealth = 0;
             if (charManager != null) { charManager.OnDeath(); }

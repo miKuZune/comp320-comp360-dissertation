@@ -67,15 +67,18 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
         if(Physics.Raycast(startPoint, direction, out hit, Mathf.Infinity))
         {
             // Handle if it hit the Enemies.
-            if(hit.transform.tag == "Enemy")
+            if (hit.transform.tag == "Enemy")
             {
                 DealDamage(hit.transform.gameObject, 1);
-            }else if(hit.transform.tag == "Head")
+                DatabaseManager.instance.currSessionData.body_shots++;
+            }
+            else if (hit.transform.tag == "Head")
             {
-
                 GameObject AI_GO = hit.transform.GetComponent<Head>().AI_main;
                 DealDamage(AI_GO, headShotMultiplier);
+                DatabaseManager.instance.currSessionData.head_shots++;
             }
+            else { DatabaseManager.instance.currSessionData.missed_shots++; }
 
             // Update the amount of ammo.
             currentAmmo--;

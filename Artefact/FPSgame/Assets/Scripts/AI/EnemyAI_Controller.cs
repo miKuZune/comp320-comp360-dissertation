@@ -71,7 +71,6 @@ public class EnemyAI_Controller : MonoBehaviour {
         GetComponent<NavMeshAgent>().speed = moveSpeed;                                     // Set Unit's per second the AI can travel.
 
         bulletOriginPoint = transform.Find("BulletSpawn").gameObject;
-        Debug.Log(bulletOriginPoint);
 	}
 	
 	// Update is called once per frame
@@ -126,9 +125,7 @@ public class EnemyAI_Controller : MonoBehaviour {
         bullet =  Instantiate((GameObject)Resources.Load("Bullet"), bulletOriginPoint.transform.position, Quaternion.identity);             // Load the bullet prefab from the resources folder and create a new instance of it within the game world.
         bullet.transform.parent = null;
 
-        Bullet bull = bullet.GetComponent<Bullet>();                                        // Store a reference to the new gameobjects bullet script.
-
-        
+        Bullet bull = bullet.GetComponent<Bullet>();                                        // Store a reference to the new gameobjects bullet script. 
 
         Vector3 target = GameObject.FindGameObjectWithTag("Player").transform.position;      // Get the player's position.
         System.Random rand = new System.Random();
@@ -225,7 +222,8 @@ public class EnemyAI_Controller : MonoBehaviour {
         float AI_PlayerDist = Vector3.Distance(transform.position, player.transform.position);
         string killGunName = player.GetComponent<Gun_Manager>().currentGun.Gun_Name;
         // Store the data in the database.
-        DatabaseManager.instance.InsertIntoDB(killGunName, AI_PlayerDist, timeSinceFirstShot);
+        DatabaseManager.instance.StoreNewEventData(killGunName, AI_PlayerDist, timeSinceFirstShot);
+        DatabaseManager.instance.currSessionData.enemiesKilled++;
         // Tell the gamemanager that an enemy has been killed so it can handle the rounds.
         GameManager.instance.IncrementEnemiesKilled();
     }

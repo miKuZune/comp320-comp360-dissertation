@@ -7,17 +7,25 @@ using Mono.Data.Sqlite;
 
 public class DatabaseManager : MonoBehaviour
 {
-    public bool stopInsertion = false;                                                                  // Used to stop this script from entering data to the DB. Useful for testing game systems without messing with data.
+    [SerializeField]
+    bool stopInsertion = false;                                                                         // Used to stop this script from entering data to the DB. Useful for testing game systems without messing with data.
+    [SerializeField]
+    bool useOfficialTable = false;
 
     public static DatabaseManager instance;                                                             // Store a singleton reference to this script.
 
     private string connectionString;                                                                    // Stores the path to the storage location of the database.
 
     const string EventsTable = "Events";                                                                // Stores the name of the table used to store the data.
+    const string SessionTable = "Session";
 
     int currSessionID;                                                                                  // Stores a sessionID value to uniquley identfy the set of data created in one play session.
 
-    List<EventTableData> EventData = new List<EventTableData>();                                        // Stores the list of previous data from the database.
+    List<EventTableData> PreExistingEventData = new List<EventTableData>();                                        // Stores the list of previous data from the database.
+
+    public SessionTableData currSessionData = new SessionTableData();
+    List<EventTableData> currSessionEventData = new List<EventTableData>();
+
 
     void Awake()
     {
@@ -28,19 +36,22 @@ public class DatabaseManager : MonoBehaviour
 
     public void Start()
     {
-        connectionString = "URI=file:" + Application.dataPath + "/EventsDB.sqlite";                     // Sets the path for db location. Uses Unity's datapath so that it can be found on any machine.
-
+        connectionString = "URI=file:" + Application.dataPath + "/EventsDB";                            // Sets the path for db location. Uses Unity's datapath so that it can be found on any machine.
+        if (useOfficialTable) { connectionString += "_Official"; Debug.Log("WARNING! Accessing official table."); }
+        connectionString += ".sqlite";
         ReadDB();                                                                                       // Store the list of data from the events database.
 
         currSessionID = GetHighestSessionID() + 1;                                                      // Create a new sessionID by getting the highest sessionID and adding one.
         CreateTable();
+
+        currSessionData.sessionID = currSessionID;
     }
 
     // Get the highest value for SessionID from the event table data.
     int GetHighestSessionID()
     {
         int sessionID = 0;  
-        foreach(EventTableData data in EventData)                                                   // Go through all the data from the events table that has been stored in a list.
+        foreach(EventTableData data in PreExistingEventData)                                                   // Go through all the data from the events table that has been stored in a list.
         {
             if (data.sessionID > sessionID) { sessionID = data.sessionID; }                         // Store the value of the sessionID if it is higher than the on in the temp variable.
         }
@@ -71,7 +82,7 @@ public class DatabaseManager : MonoBehaviour
                 newReadData.killWeapon = reader.GetString(2);                                   // Store the weapon used to kill.
                 newReadData.distance = reader.GetFloat(3);                                      // Store the distance from which the player killed the AI.
                 newReadData.killTime = reader.GetFloat(4);                                      // Store the time it took from the first shot to the killing shot.
-                EventData.Add(newReadData);                                                     // Add this data to a list.
+                PreExistingEventData.Add(newReadData);                                                     // Add this data to a list.
             }
         }
 
@@ -96,6 +107,8 @@ public class DatabaseManager : MonoBehaviour
 
         // Close connections
         dbConn.Close();
+
+        Debug.Log("single insertion");
     }
 
     // Creates the table to store the data in.
@@ -105,24 +118,96 @@ public class DatabaseManager : MonoBehaviour
         IDbConnection dbConn = new SqliteConnection(connectionString);
         dbConn.Open();
 
-        // Setup and execute the command to create the table.
-        string SQL_Comm = "CREATE TABLE " + EventsTable +"(EventID int,SessionID int,KillWeapon string,Distance float,TimeToKill); ";           // SQL command to create the table.
-        IDbCommand comm = dbConn.CreateCommand();                                                                                               // Create a command object to execute the SQL.
-        comm.CommandText = SQL_Comm;                                                                                                            // Give the command obj the SQL command.
-        comm.ExecuteNonQuery();                                                                                                                 // Execute the command.
+        // Use of try and catch to stop error messages when the table already exists.
+        try
+        {
+            // Setup and execute the command to create the table.
+            string SQL_Comm = "CREATE TABLE " + EventsTable + "(EventID int,SessionID int,KillWeapon string,Distance float,TimeToKill); ";           // SQL command to create the table.
+            IDbCommand comm = dbConn.CreateCommand();                                                                                               // Create a command object to execute the SQL.
+            comm.CommandText = SQL_Comm;                                                                                                            // Give the command obj the SQL command.
+            comm.ExecuteNonQuery();
+            // Output that the database has been created. Only seen in Unity Editor and output logs.
+            Debug.Log("Table created");
+        }
+        catch(Exception e)
+        {
+            Debug.Log("Table not created. " + e.Message);
+        }
+                                                                                                                      // Execute the command.
 
         // Close connection to the database.
         dbConn.Close();
-        // Output that the database has been created. Only seen in Unity Editor and output logs.
-        Debug.Log("Table created");
+        
+    }
+
+    public void StoreNewEventData(string killWeapon, float distance, float killtime)
+    {
+        EventTableData newData = new EventTableData();
+
+        newData.sessionID = currSessionID;
+        newData.killWeapon = killWeapon;
+        newData.distance = distance;
+        newData.killTime = killtime;
+
+        currSessionEventData.Add(newData);
+
+        Debug.Log(currSessionEventData.Count);
+    }
+
+    public void InsertAllData()
+    {
+        IDbConnection dbConn = new SqliteConnection(connectionString);
+        dbConn.Open();
+
+        string SQL_Command = "";
+        IDbCommand comm;
+        // Insert all event data stored.
+        for (int i = 0; i < currSessionEventData.Count; i++)
+        {
+            SQL_Command = "INSERT INTO " + EventsTable + "(SessionID, KillWeapon, Distance, TimeToKill) Values( '"
+                + currSessionEventData[i].sessionID + "','" + currSessionEventData[i].killWeapon + "','"
+                + currSessionEventData[i].distance + "','" + currSessionEventData[i].killTime + "')";
+
+            comm = dbConn.CreateCommand();
+            comm.CommandText = SQL_Command;
+            comm.ExecuteNonQuery();
+        }
+        Debug.Log("Inserted events");
+
+        // Insert session data.
+        
+        SQL_Command = "INSERT INTO " + SessionTable + "(SessionID, headShots, bodyShots, missedShots, totalShots, endRound, enemiesKilled)" +
+            " values( '"+ currSessionData.sessionID + "','" + currSessionData.head_shots + "','" + currSessionData.body_shots
+            + "','" + currSessionData.missed_shots + "','" + currSessionData.total_shots + "','" + currSessionData.endRound
+            + "','" + currSessionData.enemiesKilled + "')";
+
+        Debug.Log(SQL_Command);
+        comm = dbConn.CreateCommand();
+        comm.CommandText = SQL_Command;
+        comm.ExecuteNonQuery();
+
+        dbConn.Close();
+        Debug.Log("entered data");
     }
 }
 
-// Store the data that is stored in the database.
+// Store the data that is stored in the database relating to the kill data.
 class EventTableData
 {
     public int sessionID;
     public string killWeapon;
     public float distance;
     public float killTime;
+}
+
+// Store the data to be stored in the database relating to the session data.
+public class SessionTableData
+{
+    public int sessionID;
+    public int head_shots;
+    public int body_shots;
+    public int missed_shots;
+    public int total_shots;
+    public int endRound;
+    public int enemiesKilled;
 }
