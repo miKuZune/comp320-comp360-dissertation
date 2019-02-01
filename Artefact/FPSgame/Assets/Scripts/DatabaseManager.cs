@@ -181,7 +181,6 @@ public class DatabaseManager : MonoBehaviour
             + "','" + currSessionData.missed_shots + "','" + currSessionData.total_shots + "','" + currSessionData.endRound
             + "','" + currSessionData.enemiesKilled + "')";
 
-        Debug.Log(SQL_Command);
         comm = dbConn.CreateCommand();
         comm.CommandText = SQL_Command;
         comm.ExecuteNonQuery();
