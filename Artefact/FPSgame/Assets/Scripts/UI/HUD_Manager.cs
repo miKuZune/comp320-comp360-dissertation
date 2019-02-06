@@ -99,9 +99,12 @@ public class HUD_Manager : MonoBehaviour {
         roundText.text = "Round: " + newRoundNum;
     }
 
-    public void EnableHitMarker()
+    public void EnableHitMarker(bool headShot)
     {
         hitMarker.enabled = true;
         hitMarkerActiveTimer = 0;
+
+        if (headShot) { hitMarker.color = Color.red; }
+        else { hitMarker.color = Color.black; }
     }
 }

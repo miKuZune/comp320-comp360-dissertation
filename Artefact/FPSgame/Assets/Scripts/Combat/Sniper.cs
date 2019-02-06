@@ -70,12 +70,15 @@ public class Sniper : MonoBehaviour, I_Gun {
                 DealDamage(hit.transform.gameObject, 1);
                 DatabaseManager.instance.currSessionData.body_shots++;
                 DatabaseManager.instance.currSessionData.SR_body_shots++;
-            }else if(hit.transform.tag == "Head")
+                HUD_Manager.instance.EnableHitMarker(false);
+            }
+            else if(hit.transform.tag == "Head")
             {
                 GameObject AI_GO = hit.transform.GetComponent<Head>().AI_main;
                 DealDamage(AI_GO, headShotMultiplier);
                 DatabaseManager.instance.currSessionData.head_shots++;
                 DatabaseManager.instance.currSessionData.SR_head_shots++;
+                HUD_Manager.instance.EnableHitMarker(true);
             }
             else
             {
@@ -92,6 +95,5 @@ public class Sniper : MonoBehaviour, I_Gun {
     public void DealDamage(GameObject enemy, float multiplier)
     {
         enemy.GetComponent<Health>().DealDmg((int)(damage * multiplier));
-        HUD_Manager.instance.EnableHitMarker();
     }
 }

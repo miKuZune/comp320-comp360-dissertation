@@ -79,6 +79,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
                 DealDamage(hit.transform.gameObject, 1);
                 DatabaseManager.instance.currSessionData.body_shots++;
                 DatabaseManager.instance.currSessionData.S_body_shots++;
+                HUD_Manager.instance.EnableHitMarker(false);
             }
             else if (hit.transform.tag == "Head")
             {
@@ -86,6 +87,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
                 DealDamage(AI_GO, headShotMultiplier);
                 DatabaseManager.instance.currSessionData.head_shots++;
                 DatabaseManager.instance.currSessionData.S_head_shots++;
+                HUD_Manager.instance.EnableHitMarker(true);
             }
             else
             {
@@ -102,7 +104,6 @@ public class Shotgun : MonoBehaviour, I_Gun {
     public void DealDamage(GameObject enemy, float multiplier)
     {
         enemy.GetComponent<Health>().DealDmg((int)(calculatedDmg * multiplier));
-        HUD_Manager.instance.EnableHitMarker();
     }
     float CalculateDamage(float dist)
     {
