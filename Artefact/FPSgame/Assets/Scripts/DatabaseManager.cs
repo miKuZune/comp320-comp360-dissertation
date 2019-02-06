@@ -26,6 +26,7 @@ public class DatabaseManager : MonoBehaviour
     public SessionTableData currSessionData = new SessionTableData();
     List<EventTableData> currSessionEventData = new List<EventTableData>();
 
+    UnityTime unityTime;
 
     void Awake()
     {
@@ -45,6 +46,8 @@ public class DatabaseManager : MonoBehaviour
         CreateTable();
 
         currSessionData.sessionID = currSessionID;
+
+        unityTime = new UnityTime();                                                                    // Custom class containing functions useful for formatting time.
     }
 
     // Get the highest value for SessionID from the event table data.
@@ -148,10 +151,15 @@ public class DatabaseManager : MonoBehaviour
         newData.killWeapon = killWeapon;
         newData.distance = distance;
         newData.killTime = killtime;
+        // Get the current time.
+        float timeStamp = GameManager.instance.timeSinceStart;
+
+        int milliseconds = unityTime.GetMilliseconds(timeStamp);
+        int seconds = unityTime.GetSeconds(timeStamp);
+        int mins = unityTime.GetMinutes(seconds);
+        newData.timeStamp = mins + ":" + (seconds - (mins * 60)) + ":" + milliseconds;
 
         currSessionEventData.Add(newData);
-
-        Debug.Log(currSessionEventData.Count);
     }
 
     public void InsertAllData()
@@ -164,9 +172,10 @@ public class DatabaseManager : MonoBehaviour
         // Insert all event data stored.
         for (int i = 0; i < currSessionEventData.Count; i++)
         {
-            SQL_Command = "INSERT INTO " + EventsTable + "(SessionID, KillWeapon, Distance, TimeToKill) Values( '"
+            SQL_Command = "INSERT INTO " + EventsTable + "(SessionID, KillWeapon, Distance, TimeToKill, TimeStamp) Values( '"
                 + currSessionEventData[i].sessionID + "','" + currSessionEventData[i].killWeapon + "','"
-                + currSessionEventData[i].distance + "','" + currSessionEventData[i].killTime + "')";
+                + currSessionEventData[i].distance + "','" + currSessionEventData[i].killTime +  "','" + 
+                currSessionEventData[i].timeStamp + "')";
 
             comm = dbConn.CreateCommand();
             comm.CommandText = SQL_Command;
@@ -176,10 +185,13 @@ public class DatabaseManager : MonoBehaviour
 
         // Insert session data.
         
-        SQL_Command = "INSERT INTO " + SessionTable + "(SessionID, headShots, bodyShots, missedShots, totalShots, endRound, enemiesKilled)" +
+        SQL_Command = "INSERT INTO " + SessionTable + "(SessionID, headShots, bodyShots, missedShots, totalShots, endRound, enemiesKilled, AR_headShots, AR_bodyShots, AR_missedShots, S_headShots, S_bodyShots, S_missedShots, SR_headShots, SR_bodyShots, SR_missedShots)" +
             " values( '"+ currSessionData.sessionID + "','" + currSessionData.head_shots + "','" + currSessionData.body_shots
             + "','" + currSessionData.missed_shots + "','" + currSessionData.total_shots + "','" + currSessionData.endRound
-            + "','" + currSessionData.enemiesKilled + "')";
+            + "','" + currSessionData.enemiesKilled + "','" + currSessionData.AR_head_shots + "','" + currSessionData.AR_body_shots
+            + "','" + currSessionData.AR_missed_shots + "','" + currSessionData.S_head_shots + "','" + currSessionData.S_body_shots
+            + "','" + currSessionData.S_missed_shots + "','" + currSessionData.SR_head_shots + "','" + currSessionData.SR_body_shots
+            + "','" + currSessionData .SR_missed_shots+ "')";
 
         comm = dbConn.CreateCommand();
         comm.CommandText = SQL_Command;
@@ -197,6 +209,7 @@ class EventTableData
     public string killWeapon;
     public float distance;
     public float killTime;
+    public string timeStamp;
 }
 
 // Store the data to be stored in the database relating to the session data.
@@ -209,4 +222,17 @@ public class SessionTableData
     public int total_shots;
     public int endRound;
     public int enemiesKilled;
+
+    // Assult rifle data
+    public int AR_head_shots;
+    public int AR_body_shots;
+    public int AR_missed_shots;
+    // Shotgun data
+    public int S_head_shots;
+    public int S_body_shots;
+    public int S_missed_shots;
+    // Sniper rifle data
+    public int SR_head_shots;
+    public int SR_body_shots;
+    public int SR_missed_shots;
 }

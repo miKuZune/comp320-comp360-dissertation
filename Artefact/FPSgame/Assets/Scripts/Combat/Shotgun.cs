@@ -78,19 +78,25 @@ public class Shotgun : MonoBehaviour, I_Gun {
             {
                 DealDamage(hit.transform.gameObject, 1);
                 DatabaseManager.instance.currSessionData.body_shots++;
+                DatabaseManager.instance.currSessionData.S_body_shots++;
             }
             else if (hit.transform.tag == "Head")
             {
                 GameObject AI_GO = hit.transform.GetComponent<Head>().AI_main;
                 DealDamage(AI_GO, headShotMultiplier);
                 DatabaseManager.instance.currSessionData.head_shots++;
+                DatabaseManager.instance.currSessionData.S_head_shots++;
             }
-            else { DatabaseManager.instance.currSessionData.missed_shots++; }
-            // Decrease ammo.
-            currentAmmo--;
-            HUD_Manager.instance.UpdateAmmo();
-            Gun_Manager.instance.ActivateVFX();
+            else
+            {
+                DatabaseManager.instance.currSessionData.missed_shots++;
+                DatabaseManager.instance.currSessionData.S_missed_shots++;
+            }
         }
+        // Decrease ammo.
+        currentAmmo--;
+        HUD_Manager.instance.UpdateAmmo();
+        Gun_Manager.instance.ActivateVFX();
     }
 
     public void DealDamage(GameObject enemy, float multiplier)

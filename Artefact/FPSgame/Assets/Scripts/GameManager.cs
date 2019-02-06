@@ -37,6 +37,9 @@ public class GameManager : MonoBehaviour {
     [SerializeField]
     int randSpawnOffsetMax;
 
+    [HideInInspector]
+    public float timeSinceStart = 0;
+
     void Awake()
     {
         // Ensures there is only one instance of this script.
@@ -55,6 +58,8 @@ public class GameManager : MonoBehaviour {
         player = GameObject.FindGameObjectWithTag("Player");
         // Starts the first round.
         NextRound();
+
+        timeSinceStart = 57;
     }
 
     public void ToggleMouse()
@@ -124,10 +129,18 @@ public class GameManager : MonoBehaviour {
     }
 	
 	// Update is called once per frame
-	void Update () {
+	void Update ()
+    {
         // Check if more enemies need to be created.
         if(NeedToSpawnEnemy()){SpawnEnemy();}
         // Check if all enemies in the round have been killed.
         if (enemiesKilledInRound == enemiesInRound) { NextRound(); }
+
+        // Count how long the player has been in game.
+        timeSinceStart += Time.deltaTime;
 	}
+
+    
+
+    
 }
