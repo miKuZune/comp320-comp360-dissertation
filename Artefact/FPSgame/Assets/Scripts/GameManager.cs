@@ -40,6 +40,8 @@ public class GameManager : MonoBehaviour {
     [HideInInspector]
     public float timeSinceStart = 0;
 
+    LinearRegression LR;
+
     void Awake()
     {
         // Ensures there is only one instance of this script.
@@ -60,6 +62,9 @@ public class GameManager : MonoBehaviour {
         NextRound();
 
         timeSinceStart = 57;
+
+        LR = new LinearRegression();
+        LR.Read();
     }
 
     public void ToggleMouse()
