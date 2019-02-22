@@ -53,7 +53,8 @@ public class LinearRegression
             currRow++;
         }
 
-
+        double ultiTemp = 0;
+        Debug.Log("CALCULATING COEFFICIENT");
         for(int i = 0; i < results.Count; i++)
         {
             results[i].Mean = results[i].Mean / currRow;
@@ -69,7 +70,7 @@ public class LinearRegression
             //          (Zx1^2*x2^2...xN^2) - (Zx1x2...xn)^2
 
             // Get Z(x1^2 * x2^2 ... xn^2)
-            /*double sumOfSquaresExcludingCurrent = 0;
+            double sumOfSquaresExcludingCurrent = 0;
             double sumOfAllSquares = 0;                 
             for(int j = 0; j < results.Count - 1; j++)
             {
@@ -87,6 +88,12 @@ public class LinearRegression
                 sumOfXY += (results[i].values[j] * results[results.Count - 1].values[j]);
             }
 
+            double temporary = 0;               // (z(x1^2)(ZxNy) + ... Z(xn^2)(ZxNy) )
+            for(int j = 0; j < results.Count - 1; j++)
+            {
+                temporary += results[j].sumOfValuesSquared * sumOfXY;
+            }
+
             // Get (Zx1x2...xn)
             double sumOfXs = 0;
             for(int j = 0; j < results[i].values.Count; j++)
@@ -97,6 +104,19 @@ public class LinearRegression
                     temp += results[x].values[j];
                 }
                 sumOfXs += temp;
+            }
+
+            double temp2 = 0;
+            for(int j = 0; j < results.Count - 1; j++)
+            {
+                double innerTemp = 0;
+                double innerTemp2 = 0;
+                for(int x = 0; x < results[j].values.Count; x++)
+                {
+                    innerTemp += results[i].values[x] * results[j].values[x];
+                    innerTemp2 += results[j].values[x] * results[results.Count - 1].values[x];
+                }
+                temp2 += innerTemp * innerTemp2;
             }
 
             // Get (Z(x1y x2y ... xNy))
@@ -111,83 +131,37 @@ public class LinearRegression
                 sumOfXYs += temp;
             }
 
+            double temp3 = 0;
+            for(int j = 0; j < results.Count - 1; j++)
+            {
+                double innerTemp = 0;
+                for(int x = 0; x < results[j].values.Count; x++)
+                {
+                    innerTemp += results[i].values[x] * results[j].values[x];
+                }
+                temp3 += innerTemp * innerTemp;
+            }
+
             double sumOfXsSquared = sumOfXs * sumOfXs;
 
-            results[i].coefficient = (sumOfSquaresExcludingCurrent * sumOfXY) - (sumOfXs * sumOfXYs);
+            //results[i].coefficient = (sumOfSquaresExcludingCurrent * sumOfXY) - (sumOfXs * sumOfXYs);
+            results[i].coefficient = temporary - temp2;
+            results[i].coefficient /= (sumOfAllSquares - sumOfXsSquared);
+            Debug.Log(sumOfAllSquares + " " + sumOfXsSquared);
+            //results[i].coefficient = Math.Sqrt(results[i].coefficient);
+            ultiTemp += results[i].coefficient;
+           // Debug.Log("test: " + temporary);
+           // Debug.Log("curr: " + (sumOfSquaresExcludingCurrent * sumOfXY));
+           // Debug.Log("diff: " + (temporary - (sumOfSquaresExcludingCurrent * sumOfXY)));
             //Debug.Log(sumOfAllSquares + " " + sumOfXsSquared + " " + (sumOfAllSquares - sumOfXsSquared));
             //Debug.Log(results[i].coefficient + " before");
-            results[i].coefficient /= (sumOfAllSquares - (sumOfXsSquared));
-            Debug.Log(results[i].coefficient + " after");*/
+            //results[i].coefficient /= (sumOfAllSquares - (sumOfXsSquared));
+            
+            Debug.Log(results[i].coefficient + " " + results[i].label + " after");
 
-
-
-            // Formula for coefficient. Z = sigma/sum of
-            // mn = (Zx1^2)(Zx2^2)...(ZxN^2)(ZxNy) - (Zx1x2...xN)(Zx1y)(Zx2y)...(ZxNy)
-            //      ------------------------------------------------------------------
-            //                  (Zx1^2)(Zx2^2)...(ZxN^2) - (Zx1x2...xn)^2
-
-            //Debug.Log("Sum of values squared:" + i + " : " + results[i].sumOfValuesSquared);
-            //Debug.Log("Sum of " + i + "y:" + results[i].sumofValuesTimesY);
-
-            // Get (Zx1^2)(Zx2^2)...(ZxN^2) 
-             double sumOfXSquaredsExclude = results[0].sumOfValuesSquared;
-             double sumOfXSquareds = results[0].sumOfValuesSquared;
-             for (int j = 0; j < results.Count - 1; j++)
-             {
-                 if (j != i)
-                 {
-                     sumOfXSquaredsExclude *= results[j].sumOfValuesSquared;             // Stores the value excluding the current result being checked.
-                 }
-                 sumOfXSquareds *= results[j].sumOfValuesSquared;                        // Encompases all the results.
-             }
-
-             // Get (ZxNy)
-             double sumOfXY = 0;
-             for(int j = 0; j < results[i].values.Count; j++)
-             {
-                 sumOfXY += (results[i].values[j] * results[results.Count - 1].values[j]);
-             }
-
-             // Get the (Zx1x2...xN)
-             double sumOfCurrXTimesXN = 0;
-             double sumOfCurrXTimesXNSquared = 0;
-             double tempForIter = results[0].values[0];
-             for(int j = 0; j < results[i].values.Count; j++)
-             {
-
-                 for(int x = 0; x < results.Count - 1; x++)
-                 {
-
-                     if (x != i){tempForIter *= results[x].values[j];}
-                 }
-                 sumOfCurrXTimesXN += tempForIter;
-                 if (j + 1 < results.Count - 1) { tempForIter = results[j + 1].values[0]; }
-             }
-
-             sumOfCurrXTimesXNSquared = sumOfCurrXTimesXN * sumOfCurrXTimesXN;
-
-             double sumOfxNy = 0;
-             //  Get (Zx1y)(Zx2y)...(ZxNy)  not including the current one.
-             for(int j = 0; j < results.Count - 1; j++)
-             {
-                 for(int x = 0; x < results[j].values.Count; x++)
-                 {
-                     if( j != i)
-                     {
-                         sumOfxNy += (results[j].values[x] * results[results.Count - 1].values[x]);
-                     }
-                 }
-             }
-
-             results[i].coefficient = (sumOfXSquaredsExclude * sumOfXY) - (sumOfCurrXTimesXN * sumOfxNy);
-             results[i].coefficient /= (sumOfXSquareds) - sumOfCurrXTimesXNSquared;
-
-             Debug.Log(results[i].coefficient);
-
-
+            Debug.Log("end of iteration");
         }
-
-
+        Debug.Log("DONE CALCULATING COEFFICIENT");
 
         conn.Close();
         reader.Close();
