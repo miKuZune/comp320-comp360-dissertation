@@ -64,7 +64,10 @@ public class GameManager : MonoBehaviour {
         timeSinceStart = 57;
 
         LR = new LinearRegression();
-        LR.Read();
+        //LR.Read();
+
+        AccordTest AT = new AccordTest();
+        AT.DO();
     }
 
     public void ToggleMouse()

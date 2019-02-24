@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using System.Data;
 using Mono.Data.Sqlite;
+using Accord.Statistics.Models.Regression.Linear;
 
 public class LinearRegression
 {
@@ -38,7 +39,7 @@ public class LinearRegression
             {
                 results[i].Count = results[i].Count + 1;
                 results[i].Mean += reader.GetInt32(i + 1);
-                results[i].values.Add(reader.GetInt32(i + 1));
+                //results[i].values.Add(reader.GetInt32(i + 1));
 
                 results[i].sumOfValuesSquared += reader.GetInt32(i + 1) * reader.GetInt32(i + 1);       //(ZxN^2)
                 results[i].sumOfValues += reader.GetInt32(i + 1);
@@ -53,115 +54,34 @@ public class LinearRegression
             currRow++;
         }
 
-        double ultiTemp = 0;
-        Debug.Log("CALCULATING COEFFICIENT");
-        for(int i = 0; i < results.Count; i++)
+        double[][] inputs = new double[results.Count - 1][];
+        for(int i = 0; i < results.Count - 1; i++)
         {
-            results[i].Mean = results[i].Mean / currRow;
-            
-            results[i].StandardDeviation = GetStandardDeviation(results[i].Mean, results[i].values);
-
-
-            // Don't need to do the rest for the dependent variable
-            if (i == results.Count - 1) { return; }
-            // Formula for coefficient. Z = sigma/sum of
-            // mn = (Z(x1^2*x2^2...xn^2))(ZxNy) - (Zx1x2...xN)(Zx1y * x2y ... xNy)
-            // -------------------------------------------------------------------
-            //          (Zx1^2*x2^2...xN^2) - (Zx1x2...xn)^2
-
-            // Get Z(x1^2 * x2^2 ... xn^2)
-            double sumOfSquaresExcludingCurrent = 0;
-            double sumOfAllSquares = 0;                 
-            for(int j = 0; j < results.Count - 1; j++)
+            inputs[i] = new double[results[i].values.Length];
+            for(int j = 0; j < results[i].values.Length; j++)
             {
-                if(j != i)
-                {
-                    sumOfSquaresExcludingCurrent += results[i].sumOfValuesSquared;
-                }
-                sumOfAllSquares += results[i].sumOfValuesSquared;
+                inputs[i][j] = results[i].values[j];
             }
-
-            // Get (ZxNy)
-            double sumOfXY = 0;
-            for(int j = 0; j < results[i].values.Count; j++)
-            {
-                sumOfXY += (results[i].values[j] * results[results.Count - 1].values[j]);
-            }
-
-            double temporary = 0;               // (z(x1^2)(ZxNy) + ... Z(xn^2)(ZxNy) )
-            for(int j = 0; j < results.Count - 1; j++)
-            {
-                temporary += results[j].sumOfValuesSquared * sumOfXY;
-            }
-
-            // Get (Zx1x2...xn)
-            double sumOfXs = 0;
-            for(int j = 0; j < results[i].values.Count; j++)
-            {
-                double temp = 0;
-                for(int x = 0; x < results.Count - 1; x++)
-                {
-                    temp += results[x].values[j];
-                }
-                sumOfXs += temp;
-            }
-
-            double temp2 = 0;
-            for(int j = 0; j < results.Count - 1; j++)
-            {
-                double innerTemp = 0;
-                double innerTemp2 = 0;
-                for(int x = 0; x < results[j].values.Count; x++)
-                {
-                    innerTemp += results[i].values[x] * results[j].values[x];
-                    innerTemp2 += results[j].values[x] * results[results.Count - 1].values[x];
-                }
-                temp2 += innerTemp * innerTemp2;
-            }
-
-            // Get (Z(x1y x2y ... xNy))
-            double sumOfXYs = 0;
-            for(int j = 0; j < results[i].values.Count; j++)
-            {
-                double temp = 0;
-                for(int x = 0; x < results.Count - 1; x++)
-                {
-                    temp += results[x].values[j] * results[results.Count - 1].values[j];
-                }
-                sumOfXYs += temp;
-            }
-
-            double temp3 = 0;
-            for(int j = 0; j < results.Count - 1; j++)
-            {
-                double innerTemp = 0;
-                for(int x = 0; x < results[j].values.Count; x++)
-                {
-                    innerTemp += results[i].values[x] * results[j].values[x];
-                }
-                temp3 += innerTemp * innerTemp;
-            }
-
-            double sumOfXsSquared = sumOfXs * sumOfXs;
-
-            //results[i].coefficient = (sumOfSquaresExcludingCurrent * sumOfXY) - (sumOfXs * sumOfXYs);
-            results[i].coefficient = temporary - temp2;
-            results[i].coefficient /= (sumOfAllSquares - sumOfXsSquared);
-            Debug.Log(sumOfAllSquares + " " + sumOfXsSquared);
-            //results[i].coefficient = Math.Sqrt(results[i].coefficient);
-            ultiTemp += results[i].coefficient;
-           // Debug.Log("test: " + temporary);
-           // Debug.Log("curr: " + (sumOfSquaresExcludingCurrent * sumOfXY));
-           // Debug.Log("diff: " + (temporary - (sumOfSquaresExcludingCurrent * sumOfXY)));
-            //Debug.Log(sumOfAllSquares + " " + sumOfXsSquared + " " + (sumOfAllSquares - sumOfXsSquared));
-            //Debug.Log(results[i].coefficient + " before");
-            //results[i].coefficient /= (sumOfAllSquares - (sumOfXsSquared));
-            
-            Debug.Log(results[i].coefficient + " " + results[i].label + " after");
-
-            Debug.Log("end of iteration");
         }
-        Debug.Log("DONE CALCULATING COEFFICIENT");
+
+        double[] outputs = new double[results[results.Count - 1].values.Length];
+        for(int i = 0; i < results[results.Count - 1].values.Length; i++)
+        {
+            outputs[i] = results[results.Count - 1].values[i];
+        }
+
+        var ols = new OrdinaryLeastSquares()
+        {
+            UseIntercept = true
+        };
+
+        MultipleLinearRegression regression = ols.Learn(inputs, outputs);
+
+        /*for(int i = 0; i < results.Count - 1; i++)
+        {
+            results[i].coefficient = regression.Weights[i];
+            Debug.Log(results[i].coefficient);
+        }*/
 
         conn.Close();
         reader.Close();
@@ -194,7 +114,7 @@ class DataVariable
 {
     public string label;
 
-    public List<int> values = new List<int>();
+    public double[] values;
 
     public int Count;
     public double Mean;
