@@ -35,17 +35,61 @@ public class AccordTest {
         {
             // Get and evaluate currently included independent variables. (Looks to remove)
             double[] weights = GetCoefficients(rowCount, columnCount, conn, ignoreIDs);
+            double meanWeight = 0;
+            foreach (double weight in weights) { meanWeight += weight; }
+            meanWeight /= weights.Length;
 
             int leastEffectiveCoefficientID = GetLowestCoefficientID(weights);
-
-            if (weights[leastEffectiveCoefficientID] < 0.15f)
+            Debug.Log(leastEffectiveCoefficientID + " " + weights.Length);
+            if (weights.Length > 0 && weights[leastEffectiveCoefficientID] < 0.15f )
             {
                 ignoreIDs.Add(leastEffectiveCoefficientID);
+                Debug.Log("Ignoring " + leastEffectiveCoefficientID);
             }
 
             // Check non included variables to see if they can be re added.
-            
-            
+            int idToReadd = 100000;
+            double highestDelta = 0;
+            if (ignoreIDs.Count > 1)
+            {
+                for (int i = 0; i < ignoreIDs.Count; i++)
+                {
+                    // Store ignored IDS without the currently checked one.
+                    int[] ids = new int[ignoreIDs.Count - 1];
+                    List<int> tempIds = new List<int>();
+                    int currID = 0;
+
+                    for (int j = 0; j < ignoreIDs.Count; j++)
+                    {
+                        if (ignoreIDs[j] != ignoreIDs[i] && currID < ids.Length)
+                        {
+                            ids[currID] = ignoreIDs[j];
+                            tempIds.Add(ignoreIDs[j]);
+                            currID++;
+                        }
+                    }
+
+                    double[] newCo = GetCoefficients(rowCount, columnCount, conn, tempIds);
+                    double newCoMean = 0;
+                    foreach (double weight in newCo) { newCoMean += weight; }
+                    newCoMean /= newCo.Length;
+
+                    double meanDelta = meanWeight - newCoMean;
+                    meanDelta = Math.Sqrt(meanDelta * meanDelta);
+                    if (meanDelta > 0.1f)
+                    {
+                        if (meanDelta > highestDelta)
+                        {
+                            highestDelta = meanDelta;
+                            idToReadd = ignoreIDs[i];
+
+                        }
+                    }
+                }
+            }
+            ignoreIDs.Remove(idToReadd);
+            Debug.Log("not ignoring " + idToReadd);
+                    
         }
 
 
@@ -67,7 +111,7 @@ public class AccordTest {
 
             if (positiveCheck < currHighest) { leastEffectiveCoefficientID = i; }
         }
-        Debug.Log("lowest coefficient: " + weights[leastEffectiveCoefficientID] + " ID: " + leastEffectiveCoefficientID);
+        //Debug.Log("lowest coefficient: " + weights[leastEffectiveCoefficientID] + " ID: " + leastEffectiveCoefficientID);
         return leastEffectiveCoefficientID;
     }
 
@@ -93,8 +137,11 @@ public class AccordTest {
                 {
                     if (i < columnCount - 1)
                     {
-                        newRow[currColumnID] = reader.GetInt32(i + 1);
-                        currColumnID++;
+                        if(currColumnID < newRow.Length)
+                        {
+                            newRow[currColumnID] = reader.GetInt32(i + 1);
+                            currColumnID++;
+                        }
                     }
                     else { outputs[rowCount] = reader.GetInt32(i + 1); }
                 }
@@ -112,4 +159,5 @@ public class AccordTest {
 
         return regression.Weights;
     }
+
 }
