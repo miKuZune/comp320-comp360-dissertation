@@ -67,7 +67,7 @@ public class GameManager : MonoBehaviour {
         //LR.Read();
 
         AccordTest AT = new AccordTest();
-        AT.DO();
+        AT.StepWise();
     }
 
     public void ToggleMouse()
