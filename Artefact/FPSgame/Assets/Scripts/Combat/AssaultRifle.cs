@@ -5,7 +5,7 @@ using UnityEngine;
 public class AssaultRifle : MonoBehaviour, I_Gun {
     // Local Variable declartion.
     public int maxAmmo, currentAmmo, damage;
-    public float reloadTime, fireRate, accuracy, headShotMultiplier;
+    public float reloadTime, fireRate, accuracy, headShotMultiplier, timeHeld;
     public string G_Name;
     // I_Gun gets and sets. Convert the interface properties to usable variables.
     public int MaxAmmo
@@ -42,6 +42,15 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
     {
         get { return G_Name; }
         set { G_Name = value; }
+    }
+    public float TimeHeld
+    {
+        get { return timeHeld; }
+        set
+        {
+            timeHeld = value;
+            DatabaseManager.instance.currSessionData.AR_timeHeld = timeHeld;
+        }
     }
 
 
@@ -82,11 +91,14 @@ public class AssaultRifle : MonoBehaviour, I_Gun {
                 DatabaseManager.instance.currSessionData.AR_head_shots++;
                 HUD_Manager.instance.EnableHitMarker(true);
             }
-            else {
+            else
+            {
                 DatabaseManager.instance.currSessionData.missed_shots++;
                 DatabaseManager.instance.currSessionData.AR_missed_shots++;
             }
         }
+        
+        DatabaseManager.instance.currSessionData.total_shots++;
         // Update the amount of ammo.
         currentAmmo--;
         HUD_Manager.instance.UpdateAmmo();

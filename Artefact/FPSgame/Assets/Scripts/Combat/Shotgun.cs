@@ -6,7 +6,7 @@ public class Shotgun : MonoBehaviour, I_Gun {
 
     // Local Variable declartion.
     public int maxAmmo, currentAmmo, damage;
-    public float reloadTime, fireRate, accuracy, dmgFallOffRate, headShotMultiplier;
+    public float reloadTime, fireRate, accuracy, dmgFallOffRate, headShotMultiplier, timeHeld;
     public string G_Name;
     // Dynamic variables
     float calculatedDmg;
@@ -46,6 +46,15 @@ public class Shotgun : MonoBehaviour, I_Gun {
     {
         get { return G_Name; }
         set { G_Name = value; }
+    }
+    public float TimeHeld
+    {
+        get { return timeHeld; }
+        set
+        {
+            timeHeld = value;
+            DatabaseManager.instance.currSessionData.S_timeHeld = timeHeld;
+        }
     }
 
     // Constructor
@@ -95,6 +104,8 @@ public class Shotgun : MonoBehaviour, I_Gun {
                 DatabaseManager.instance.currSessionData.S_missed_shots++;
             }
         }
+        
+        DatabaseManager.instance.currSessionData.total_shots++;
         // Decrease ammo.
         currentAmmo--;
         HUD_Manager.instance.UpdateAmmo();

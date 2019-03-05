@@ -106,6 +106,9 @@ public class Gun_Manager : MonoBehaviour {
 	void Update ()
     {
         if (!isActive) { return; }
+
+        currentGun.TimeHeld += Time.deltaTime;
+
         // Handle reloading the gun.
         if (reloading)
         {

@@ -17,7 +17,7 @@ public class DatabaseManager : MonoBehaviour
     private string connectionString;                                                                    // Stores the path to the storage location of the database.
 
     const string EventsTable = "Events";                                                                // Stores the name of the table used to store the data.
-    const string SessionTable = "Session";
+    const string SessionTable = "SessionData";
 
     int currSessionID;                                                                                  // Stores a sessionID value to uniquley identfy the set of data created in one play session.
 
@@ -37,9 +37,9 @@ public class DatabaseManager : MonoBehaviour
 
     public void Start()
     {
-        connectionString = "URI=file:" + Application.dataPath + "/EventsDB";                            // Sets the path for db location. Uses Unity's datapath so that it can be found on any machine.
+        connectionString = "URI=file:" + Application.dataPath + "/DB";                            // Sets the path for db location. Uses Unity's datapath so that it can be found on any machine.
         if (useOfficialTable) { connectionString += "_Official"; Debug.Log("WARNING! Accessing official table."); }
-        connectionString += ".sqlite";
+        //connectionString += ".sqlite";
         ReadDB();                                                                                       // Store the list of data from the events database.
 
         currSessionID = GetHighestSessionID() + 1;                                                      // Create a new sessionID by getting the highest sessionID and adding one.
@@ -159,6 +159,7 @@ public class DatabaseManager : MonoBehaviour
         int mins = unityTime.GetMinutes(seconds);
         newData.timeStamp = mins + ":" + (seconds - (mins * 60)) + ":" + milliseconds;
 
+
         currSessionEventData.Add(newData);
     }
 
@@ -185,13 +186,14 @@ public class DatabaseManager : MonoBehaviour
 
         // Insert session data.
         
-        SQL_Command = "INSERT INTO " + SessionTable + "(SessionID, headShots, bodyShots, missedShots, totalShots, endRound, enemiesKilled, AR_headShots, AR_bodyShots, AR_missedShots, S_headShots, S_bodyShots, S_missedShots, SR_headShots, SR_bodyShots, SR_missedShots)" +
+        SQL_Command = "INSERT INTO " + SessionTable + "(SessionID, totalHeadShots, totalBodyShots,  totalMissedShots, totalShots, endRound, enemiesKilled, AR_headShots, AR_bodyShots, AR_missedShots, AR_timeHeld" +
+            ", S_headShots, S_bodyShots, S_missedShots, S_timeHeld, SR_headShots, SR_bodyShots, SR_missedShots, SR_timeHeld)" +
             " values( '"+ currSessionData.sessionID + "','" + currSessionData.head_shots + "','" + currSessionData.body_shots
             + "','" + currSessionData.missed_shots + "','" + currSessionData.total_shots + "','" + currSessionData.endRound
             + "','" + currSessionData.enemiesKilled + "','" + currSessionData.AR_head_shots + "','" + currSessionData.AR_body_shots
-            + "','" + currSessionData.AR_missed_shots + "','" + currSessionData.S_head_shots + "','" + currSessionData.S_body_shots
-            + "','" + currSessionData.S_missed_shots + "','" + currSessionData.SR_head_shots + "','" + currSessionData.SR_body_shots
-            + "','" + currSessionData .SR_missed_shots+ "')";
+            + "','" + currSessionData.AR_missed_shots + "','" + currSessionData.AR_timeHeld + "','" + currSessionData.S_head_shots + "','" + currSessionData.S_body_shots
+            + "','" + currSessionData.S_missed_shots + "','" + currSessionData.S_timeHeld + "','" + currSessionData.SR_head_shots + "','" + currSessionData.SR_body_shots
+            + "','" + currSessionData.SR_missed_shots + "','"+ currSessionData.SR_timeHeld+ "')";
 
         comm = dbConn.CreateCommand();
         comm.CommandText = SQL_Command;
@@ -227,12 +229,15 @@ public class SessionTableData
     public int AR_head_shots;
     public int AR_body_shots;
     public int AR_missed_shots;
+    public float AR_timeHeld;
     // Shotgun data
     public int S_head_shots;
     public int S_body_shots;
     public int S_missed_shots;
+    public float S_timeHeld;
     // Sniper rifle data
     public int SR_head_shots;
     public int SR_body_shots;
     public int SR_missed_shots;
+    public float SR_timeHeld;
 }

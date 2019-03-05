@@ -66,8 +66,8 @@ public class GameManager : MonoBehaviour {
         LR = new LinearRegression();
         //LR.Read();
 
-        AccordTest AT = new AccordTest();
-        AT.StepWise();
+        StepwiseRegression SWR = new StepwiseRegression();
+        SWR.GetData();
     }
 
     public void ToggleMouse()
