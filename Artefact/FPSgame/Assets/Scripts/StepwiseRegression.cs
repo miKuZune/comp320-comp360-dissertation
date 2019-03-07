@@ -35,6 +35,7 @@ public class StepwiseRegression {
             }
             
         }   // Count the number of sessions by going through all lines in the DB.
+        Debug.Log(sessionCount);
         reader.Close();
 
         UnityTime uTime = new UnityTime();
@@ -49,7 +50,7 @@ public class StepwiseRegression {
         {
             if(reader.GetInt32(1) != currRowID + 1)
             {
-                Debug.Log("New session");
+                Debug.Log("New session " + reader.GetInt32(1) + " curr row:" + currRowID);
 
                 for(int i = 0; i < row.Length; i++){row[i] /= row.Length;}      // Get the average of the data for the session.
 
@@ -74,8 +75,10 @@ public class StepwiseRegression {
                         break;
                 }                
             }
-
         }
+        // Add the final row in after the loop has finished.
+        for (int i = 0; i < row.Length; i++) { row[i] /= row.Length; }
+        eventsData[eventsData.Length - 1] = row;        
 
         conn.Close();
         reader.Close();
