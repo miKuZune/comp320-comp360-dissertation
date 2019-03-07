@@ -23,51 +23,70 @@ public class StepwiseRegression {
 
         // Get the number of rows and columns necessary to setup the input and output arrays.
         int columnCount = reader.FieldCount - 2;            // Column count not including the Primary Key and the Session ID.
-        int rowCount = 0;
+        int sessionCount = 0;
 
-        while (reader.Read()) { rowCount++; }   // Count the rows by going through all lines in the DB.
+        int lastSessionID = 0;
+        while (reader.Read())
+        {
+            if(lastSessionID != reader.GetInt32(1))
+            {
+                sessionCount++;
+                lastSessionID = reader.GetInt32(1);
+            }
+            
+        }   // Count the number of sessions by going through all lines in the DB.
         reader.Close();
 
         UnityTime uTime = new UnityTime();
 
-        double[][] inputs = new double[rowCount][];
+        double[][] eventsData = new double[sessionCount][];
         double[] outputs = new double[columnCount];
 
         reader = comm.ExecuteReader();
         int currRowID = 0;
-        while(reader.Read())
+        double[] row = new double[columnCount];
+        while (reader.Read())
         {
-            double[] row = new double[columnCount];
+            if(reader.GetInt32(1) != currRowID + 1)
+            {
+                Debug.Log("New session");
+
+                for(int i = 0; i < row.Length; i++){row[i] /= row.Length;}      // Get the average of the data for the session.
+
+                eventsData[currRowID] = row;
+                row = new double[columnCount];
+
+                currRowID++;
+            }
+
             for(int i = 0; i < columnCount; i++)
             {
-                Debug.Log(reader.GetName(i + 2));
                 switch (reader.GetName(i + 2))
                 {
                     case "KillWeapon":
-                        row[i] = ConvertToGunID(reader.GetString(i + 2));
+                        row[i] += ConvertToGunID(reader.GetString(i + 2));
                         break;
                     case "TimeStamp":
-                        row[i] = uTime.ConvertToSeconds(reader.GetString(i + 2));
+                        row[i] += uTime.ConvertToSeconds(reader.GetString(i + 2));
                         break;
                     default:
-                        row[i] = reader.GetDouble(i + 2);
+                        row[i] += reader.GetDouble(i + 2);
                         break;
                 }                
             }
-            inputs[currRowID] = row;
-            currRowID++;
+
         }
 
         conn.Close();
         reader.Close();
 
 
-        for(int i = 0; i < inputs.Length; i++)
+        for(int i = 0; i < eventsData.Length; i++)
         {
             string output = "";
-            for(int j = 0; j < inputs[i].Length; j++)
+            for(int j = 0; j < eventsData[i].Length; j++)
             {
-                output += inputs[i][j] + " ";
+                output += eventsData[i][j] + " ";
             }
             Debug.Log(i + ": " + output);
         }
