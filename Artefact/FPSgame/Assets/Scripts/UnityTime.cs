@@ -42,4 +42,31 @@ public class UnityTime
         return mins;
     }
 
+    public double ConvertToSeconds(string input)
+    {
+        double output = 0;
+
+        // IDs - 0 = mins, 1 = secs, 2 = millisecs
+        int[] times = new int[3];
+
+        string num = "";
+        int currID = 0; 
+        for(int i = 0; i < input.Length; i++)
+        {
+            if(input[i] != ':'){num += input[i];}
+            else
+            {
+                times[currID] = int.Parse(num);
+                currID++;
+                num = "";
+            }
+        }
+
+        output = times[0] * 60;
+        output += times[1];
+        output += times[2] / 100;
+
+        return output;
+    }
+
 }
