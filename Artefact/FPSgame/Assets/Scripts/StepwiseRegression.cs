@@ -41,21 +41,46 @@ public class StepwiseRegression {
 
         double[][] outputs = GetWeaponPreferences(sessionData);
 
+        double[][] inputs = new double[eventsData.Length][];
+        int outputColumnCount = eventsData[0].Length + sessionData[0].Length;
+        Debug.Log("ouput column count " + outputColumnCount);
+        for(int i = 0; i < inputs.Length; i++)
+        {
+            double[] row = new double[outputColumnCount];
+            if (eventsData[i] != null)
+            {
+                for (int j = 0; j < eventsData[i].Length; j++)
+                {
+                    row[j] = eventsData[i][j];
+                }
+            }
+            else { for (int j = 0; j < eventsData[i].Length; j++) { row[j] = 0; } }
+
+            if (sessionData[i] != null)
+            {
+                for (int j = 0; j < sessionData[i].Length; j++)
+                {
+                    row[j + eventsData[i].Length] = sessionData[i][j];
+                }
+            }
+            else{for (int j = eventsData[i].Length; j < row.Length; j++){row[j] = 0;}}
+
+            inputs[i] = row;
+        }
+
+        for(int i = 0; i < inputs.Length; i++)
+        {
+            string str = "";
+            for(int j = 0; j < inputs[i].Length; j++)
+            {
+                str += inputs[i][j] + " ";
+            }
+            Debug.Log(str);
+        }
              
 
         conn.Close();
         reader.Close();
-
-
-        for(int i = 0; i < eventsData.Length; i++)
-        {
-            string output = "";
-            for(int j = 0; j < eventsData[i].Length; j++)
-            {
-                output += eventsData[i][j] + " ";
-            }
-            Debug.Log(i + ": " + output);
-        }
     }
 
     double[][] GetWeaponPreferences(double[][] sessionData)
@@ -68,13 +93,10 @@ public class StepwiseRegression {
             if(sessionData[i] != null)
             {
                 double totalTime = sessionData[i][9] + sessionData[i][13] + sessionData[i][17];
-                Debug.Log("time " + totalTime);
 
                 row[0] = (sessionData[i][6] / sessionData[i][0]) + (sessionData[i][7] / sessionData[i][1]) + (sessionData[i][8] / sessionData[i][2]) * (sessionData[i][9] / totalTime);
                 row[1] = (sessionData[i][10] / sessionData[i][0]) + (sessionData[i][11] / sessionData[i][1]) + (sessionData[i][12] / sessionData[i][2]) * (sessionData[i][13] / totalTime);
                 row[2] = (sessionData[i][14] / sessionData[i][0]) + (sessionData[i][15] / sessionData[i][1]) + (sessionData[i][16] / sessionData[i][2]) * (sessionData[i][17] / totalTime);
-
-                Debug.Log(row[0] + " " + row[1] + " " + row[2]);
             }
             outputs[i] = row;
         }
