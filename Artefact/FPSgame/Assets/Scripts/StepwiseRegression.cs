@@ -1,11 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Accord.Statistics.Models.Regression.Linear;
+using Accord.Statistics.Analysis;
 using UnityEngine;
 using System.Data;
 using Mono.Data.Sqlite;
 
+using Accord.Statistics;
+using Accord.Statistics.Distributions.Univariate;
+
+using System;
+
 public class StepwiseRegression {
+
+    double[][] inputs;          // Holds the collection of the event data and the session data.
+    double[][] outputs;         // Holds the collection of weapon preferences for each session.
+    
 
     public void GetData()
     {
@@ -39,11 +49,11 @@ public class StepwiseRegression {
         double[][] eventsData = GetMeanEventsData(reader, comm, columnCount, sessionCount);
         double[][] sessionData = GetSessionData(comm, reader, sessionCount);
 
-        double[][] outputs = GetWeaponPreferences(sessionData);
+        outputs = GetWeaponPreferences(sessionData);
 
-        double[][] inputs = new double[eventsData.Length][];
+        // Bring the data together in one data structure.
+        inputs = new double[eventsData.Length][];
         int outputColumnCount = eventsData[0].Length + sessionData[0].Length;
-        Debug.Log("ouput column count " + outputColumnCount);
         for(int i = 0; i < inputs.Length; i++)
         {
             double[] row = new double[outputColumnCount];
@@ -68,39 +78,35 @@ public class StepwiseRegression {
             inputs[i] = row;
         }
 
-        for(int i = 0; i < inputs.Length; i++)
-        {
-            string str = "";
-            for(int j = 0; j < inputs[i].Length; j++)
-            {
-                str += inputs[i][j] + " ";
-            }
-            Debug.Log(str);
-        }
-             
-
         conn.Close();
         reader.Close();
     }
 
     double[][] GetWeaponPreferences(double[][] sessionData)
     {
-        double[][] outputs = new double[sessionData.Length][];
+        double[][] output = new double[3][];
+
+        for (int i = 0; i < output.Length; i++) { output[i] = new double[sessionData.Length]; }
+
         for(int i = 0; i < sessionData.Length; i++)
         {
-            double[] row = new double[3];   // 0 = AR pref; 1 = S pref; 2 = SR pref
-
             if(sessionData[i] != null)
             {
                 double totalTime = sessionData[i][9] + sessionData[i][13] + sessionData[i][17];
 
-                row[0] = (sessionData[i][6] / sessionData[i][0]) + (sessionData[i][7] / sessionData[i][1]) + (sessionData[i][8] / sessionData[i][2]) * (sessionData[i][9] / totalTime);
-                row[1] = (sessionData[i][10] / sessionData[i][0]) + (sessionData[i][11] / sessionData[i][1]) + (sessionData[i][12] / sessionData[i][2]) * (sessionData[i][13] / totalTime);
-                row[2] = (sessionData[i][14] / sessionData[i][0]) + (sessionData[i][15] / sessionData[i][1]) + (sessionData[i][16] / sessionData[i][2]) * (sessionData[i][17] / totalTime);
+                output[0][i] = (sessionData[i][6] / sessionData[i][0]) + (sessionData[i][7] / sessionData[i][1]) + (sessionData[i][8] / sessionData[i][2]) * (sessionData[i][9] / totalTime);
+                output[1][i] = (sessionData[i][10] / sessionData[i][0]) + (sessionData[i][11] / sessionData[i][1]) + (sessionData[i][12] / sessionData[i][2]) * (sessionData[i][13] / totalTime);
+                output[2][i] = (sessionData[i][14] / sessionData[i][0]) + (sessionData[i][15] / sessionData[i][1]) + (sessionData[i][16] / sessionData[i][2]) * (sessionData[i][17] / totalTime);
             }
-            outputs[i] = row;
+            else
+            {
+                Debug.Log("Zeroed");
+                output[0][i] = 0;
+                output[1][i] = 0;
+                output[2][i] = 0;
+            }
         }
-        return outputs;
+        return output;
     }
 
     double[][] GetSessionData(IDbCommand comm, IDataReader reader, int sessionCount)
@@ -194,8 +200,45 @@ public class StepwiseRegression {
         return ID;
     }
 
+    // TEST METHOD
+    void DebugOutputs()
+    {
+        string str = "inputs: ";
+        for (int i = 0; i < inputs.Length; i++)
+        {
+            for (int j = 0; j < inputs[i].Length; j++)
+            {
+                str += inputs[i][j] + " ";
+            }
+
+            Debug.Log("Length: " + inputs[i].Length + ": " + str + " . Count: " + i);
+            str = "";
+        }
+
+
+        str = "Outputs: ";
+        for (int i = 0; i < outputs.Length; i++)
+        {
+            for (int j = 0; j < outputs[i].Length; j++)
+            {
+                str += outputs[i][j] + " ";
+            }
+            Debug.Log(str);
+            str = "";
+        }
+    }
+
 	public void GetModel()
     {
+        GetData();
+
+        var testRegression = new StepwiseLogisticRegressionAnalysis(inputs, outputs[0]);
+
+        testRegression.Learn(inputs, outputs[0]);
+        
+        StepwiseLogisticRegressionModel best = testRegression.Current;
+
+        Debug.Log(best.ChiSquare + " chi");
 
     }
 }

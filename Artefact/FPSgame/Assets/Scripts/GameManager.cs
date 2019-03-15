@@ -67,7 +67,7 @@ public class GameManager : MonoBehaviour {
         //LR.Read();
 
         StepwiseRegression SWR = new StepwiseRegression();
-        SWR.GetData();
+        SWR.GetModel();
     }
 
     public void ToggleMouse()
