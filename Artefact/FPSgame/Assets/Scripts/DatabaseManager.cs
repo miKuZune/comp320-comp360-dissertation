@@ -39,7 +39,7 @@ public class DatabaseManager : MonoBehaviour
     {
         connectionString = "URI=file:" + Application.dataPath + "/DB";                            // Sets the path for db location. Uses Unity's datapath so that it can be found on any machine.
         if (useOfficialTable) { connectionString += "_Official"; Debug.Log("WARNING! Accessing official table."); }
-        //connectionString += ".sqlite";
+        connectionString += ".db";
         ReadDB();                                                                                       // Store the list of data from the events database.
 
         currSessionID = GetHighestSessionID() + 1;                                                      // Create a new sessionID by getting the highest sessionID and adding one.
