@@ -10143,7 +10143,7 @@ MonoBehaviour:
   AR_Accuracy: 10
   AR_HeadShotMultiplier: 1.2
   S_MaxAmmo: 5
-  S_Damage: 35
+  S_Damage: 60
   S_ReloadTimer: 2.5
   S_FireRate: 1
   S_Accuracy: 40
