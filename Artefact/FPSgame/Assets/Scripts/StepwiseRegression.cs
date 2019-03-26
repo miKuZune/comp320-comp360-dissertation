@@ -15,7 +15,6 @@ public class StepwiseRegression {
 
     double[][] inputs;          // Holds the collection of the event data and the session data.
     double[][] outputs;         // Holds the collection of weapon preferences for each session.
-    
 
     public void GetData()
     {
@@ -43,8 +42,6 @@ public class StepwiseRegression {
             
         }   // Count the number of sessions by going through all lines in the DB.
         reader.Close();
-
-
 
         double[][] eventsData = GetMeanEventsData(reader, comm, columnCount, sessionCount);
         double[][] sessionData = GetSessionData(comm, reader, sessionCount);
@@ -228,17 +225,115 @@ public class StepwiseRegression {
         }
     }
 
+    void GetEventData()
+    {
+        string connectionString = "URI=file:" + Application.dataPath + "/DB";
+        IDbConnection conn = new SqliteConnection(connectionString);
+        conn.Open();
+
+        IDbCommand comm = conn.CreateCommand();
+        string query = "SELECT * FROM Events";
+        comm.CommandText = query;
+        IDataReader reader = comm.ExecuteReader();
+
+        int columnCount = reader.FieldCount - 2;
+        int sessionCount = 0;
+        int eventCount = 0;
+
+        List<int> sessionIDs = new List<int>();
+        while(reader.Read())
+        {
+            eventCount++;
+            if(!sessionIDs.Contains(reader.GetInt16(1)))
+            {
+                sessionIDs.Add(reader.GetInt16(1));
+                sessionCount++;
+            }
+        }
+        reader.Close();
+        reader = comm.ExecuteReader();
+        inputs = new double[sessionCount][];
+
+        int iter = 0;
+        UnityTime UT = new UnityTime();
+
+        sessionIDs.Clear();
+
+        double[] newRow = null;
+        int rowCounter = 0;
+        while (reader.Read())
+        {
+            if (!sessionIDs.Contains(reader.GetInt32(1)))
+            {
+                sessionIDs.Add(reader.GetInt32(1));
+
+                if(newRow != null)
+                {
+                    for(int i = 0; i < newRow.Length;i++)
+                    {
+                        newRow[i] = newRow[i] / rowCounter;
+                    }
+
+                    
+
+                    inputs[iter] = newRow;
+                    iter++;
+                }
+                Debug.Log("rows: " + rowCounter);
+                rowCounter = 0;
+
+                newRow = new double[columnCount];
+            }
+
+            for (int i = 0; i < columnCount; i++)
+            {
+                
+                switch(reader.GetName(i + 2))
+                {
+                    case "KillWeapon":
+                        newRow[i] += ConvertToGunID(reader.GetString(i + 2));
+                        break;
+                    case "TimeStamp":
+                        newRow[i] += UT.ConvertToSeconds(reader.GetString(i + 2));
+                        break;
+                    default:
+                        newRow[i] += reader.GetDouble(i + 2);
+                        break;
+                }
+            }
+            rowCounter++;
+        }
+        inputs[iter] = newRow;
+        reader.Close();
+
+        Debug.Log("Column count: " + columnCount);
+        Debug.Log("Session Count: " + sessionCount);
+        Debug.Log("Event Count: " + eventCount);
+
+
+        for(int i = 0; i < inputs.Length; i++)
+        {
+            string output = "Row " + i + " :";
+            for(int j = 0; j < inputs[i].Length; j++)
+            {
+                output += inputs[i][j] + " ";
+            }
+            Debug.Log(output);
+        }
+    }
+
 	public void GetModel()
     {
-        GetData();
+        //GetData();
+        GetEventData();
 
-        var testRegression = new StepwiseLogisticRegressionAnalysis(inputs, outputs[0]);
+        /*var testRegression = new StepwiseLogisticRegressionAnalysis(inputs, outputs[0]);
 
         testRegression.Learn(inputs, outputs[0]);
         
         StepwiseLogisticRegressionModel best = testRegression.Current;
 
-        Debug.Log(best.ChiSquare + " chi");
+        Debug.Log(best.ChiSquare + " chi");*/
 
     }
 }
