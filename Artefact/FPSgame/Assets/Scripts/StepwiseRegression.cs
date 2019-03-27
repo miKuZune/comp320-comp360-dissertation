@@ -13,10 +13,10 @@ using System;
 
 public class StepwiseRegression {
 
-    double[][] inputs;          // Holds the collection of the event data and the session data.
-    double[][] outputs;         // Holds the collection of weapon preferences for each session.
+    //double[][] inputs;          // Holds the collection of the event data and the session data.
+    //double[][] outputs;         // Holds the collection of weapon preferences for each session.
 
-    public void GetData()
+    /*public void GetData()
     {
         string connectionString = "URI=file:" + Application.dataPath + "/DB";
         IDbConnection conn = new SqliteConnection(connectionString);
@@ -77,7 +77,7 @@ public class StepwiseRegression {
 
         conn.Close();
         reader.Close();
-    }
+    }*/
 
     double[][] GetWeaponPreferences(double[][] sessionData)
     {
@@ -106,7 +106,7 @@ public class StepwiseRegression {
         return output;
     }
 
-    double[][] GetSessionData(IDbCommand comm, IDataReader reader, int sessionCount)
+    /*double[][] GetSessionData(IDbCommand comm, IDataReader reader, int sessionCount)
     {
         double[][] sessionData = new double[sessionCount][];
 
@@ -130,9 +130,9 @@ public class StepwiseRegression {
         reader.Close();
 
         return sessionData;
-    }
+    }*/
 
-    double[][] GetMeanEventsData(IDataReader reader, IDbCommand comm, int columnCount, int sessionCount)
+    /*double[][] GetMeanEventsData(IDataReader reader, IDbCommand comm, int columnCount, int sessionCount)
     {
 
         double[][] eventsData = new double[sessionCount][];
@@ -177,7 +177,7 @@ public class StepwiseRegression {
         reader.Close();
 
         return eventsData;
-    }
+    }*/
 
     int ConvertToGunID(string gunName)
     {
@@ -197,36 +197,10 @@ public class StepwiseRegression {
         return ID;
     }
 
-    // TEST METHOD
-    void DebugOutputs()
+    double[][] GetEventData(int sessionCount, int columnCount, int eventCount)
     {
-        string str = "inputs: ";
-        for (int i = 0; i < inputs.Length; i++)
-        {
-            for (int j = 0; j < inputs[i].Length; j++)
-            {
-                str += inputs[i][j] + " ";
-            }
+        double[][] inputs = null;
 
-            Debug.Log("Length: " + inputs[i].Length + ": " + str + " . Count: " + i);
-            str = "";
-        }
-
-
-        str = "Outputs: ";
-        for (int i = 0; i < outputs.Length; i++)
-        {
-            for (int j = 0; j < outputs[i].Length; j++)
-            {
-                str += outputs[i][j] + " ";
-            }
-            Debug.Log(str);
-            str = "";
-        }
-    }
-
-    void GetEventData()
-    {
         string connectionString = "URI=file:" + Application.dataPath + "/DB";
         IDbConnection conn = new SqliteConnection(connectionString);
         conn.Open();
@@ -236,29 +210,14 @@ public class StepwiseRegression {
         comm.CommandText = query;
         IDataReader reader = comm.ExecuteReader();
 
-        int columnCount = reader.FieldCount - 2;
-        int sessionCount = 0;
-        int eventCount = 0;
-
-        List<int> sessionIDs = new List<int>();
-        while(reader.Read())
-        {
-            eventCount++;
-            if(!sessionIDs.Contains(reader.GetInt16(1)))
-            {
-                sessionIDs.Add(reader.GetInt16(1));
-                sessionCount++;
-            }
-        }
-        reader.Close();
-        reader = comm.ExecuteReader();
+        
         inputs = new double[sessionCount][];
 
         int iter = 0;
         UnityTime UT = new UnityTime();
 
-        sessionIDs.Clear();
 
+        List<int> sessionIDs = new List<int>();
         double[] newRow = null;
         int rowCounter = 0;
         while (reader.Read())
@@ -279,7 +238,6 @@ public class StepwiseRegression {
                     inputs[iter] = newRow;
                     iter++;
                 }
-                Debug.Log("rows: " + rowCounter);
                 rowCounter = 0;
 
                 newRow = new double[columnCount];
@@ -320,12 +278,84 @@ public class StepwiseRegression {
             }
             Debug.Log(output);
         }
+
+        return inputs;
+    }
+
+    double[][] GetSessionData(int sessionCount)
+    {
+        double[][] inputs = new double[sessionCount][];
+
+        string connectionString = "URI=file:" + Application.dataPath + "/DB";
+        IDbConnection conn = new SqliteConnection(connectionString);
+        conn.Open();
+
+        IDbCommand comm = conn.CreateCommand();
+        string query = "SELECT * FROM SessionData";
+        comm.CommandText = query;
+        IDataReader reader = comm.ExecuteReader();
+
+        int columnCount = reader.FieldCount - 1;
+        int iter = 0;
+        while(reader.Read())
+        {
+            double[] newRow = new double[columnCount];
+            for(int i = 0; i < columnCount; i++)
+            {
+                newRow[i] = reader.GetDouble(i + 1);
+            }
+            inputs[iter] = newRow;
+            iter++;
+        }
+
+
+        for(int i = 0; i < inputs.Length; i++)
+        {
+            string str = "Session " + i + ": ";
+            for(int j = 0; j < inputs[i].Length; j++)
+            {
+                str += inputs[i][j] + " ";
+            }
+            Debug.Log(str);
+        }
+
+
+        return inputs;
     }
 
 	public void GetModel()
     {
+        // Get some base data
+        string connectionString = "URI=file:" + Application.dataPath + "/DB";
+        IDbConnection conn = new SqliteConnection(connectionString);
+        conn.Open();
+
+        IDbCommand comm = conn.CreateCommand();
+        string query = "SELECT * FROM Events";
+        comm.CommandText = query;
+        IDataReader reader = comm.ExecuteReader();
+
+        int columnCount = reader.FieldCount - 2;
+        int sessionCount = 0;
+        int eventCount = 0;
+
+        List<int> sessionIDs = new List<int>();
+        while (reader.Read())
+        {
+            eventCount++;
+            if (!sessionIDs.Contains(reader.GetInt16(1)))
+            {
+                sessionIDs.Add(reader.GetInt16(1));
+                sessionCount++;
+            }
+        }
+
+        reader.Close();
+
         //GetData();
-        GetEventData();
+        double[][] inputs_Events = GetEventData(sessionCount, columnCount, eventCount);
+        double[][] inputs_Session = GetSessionData(sessionCount);
+        double[] outputs_AR;
 
         /*var testRegression = new StepwiseLogisticRegressionAnalysis(inputs, outputs[0]);
 
