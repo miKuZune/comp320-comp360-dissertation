@@ -13,32 +13,7 @@ using System;
 
 public class StepwiseRegression {
 
-    /*double[][] GetWeaponPreferences(double[][] sessionData)
-    {
-        double[][] output = new double[3][];
-
-        for (int i = 0; i < output.Length; i++) { output[i] = new double[sessionData.Length]; }
-
-        for(int i = 0; i < sessionData.Length; i++)
-        {
-            if(sessionData[i] != null)
-            {
-                double totalTime = sessionData[i][9] + sessionData[i][13] + sessionData[i][17];
-
-                output[0][i] = (sessionData[i][6] / sessionData[i][0]) + (sessionData[i][7] / sessionData[i][1]) + (sessionData[i][8] / sessionData[i][2]) * (sessionData[i][9] / totalTime);
-                output[1][i] = (sessionData[i][10] / sessionData[i][0]) + (sessionData[i][11] / sessionData[i][1]) + (sessionData[i][12] / sessionData[i][2]) * (sessionData[i][13] / totalTime);
-                output[2][i] = (sessionData[i][14] / sessionData[i][0]) + (sessionData[i][15] / sessionData[i][1]) + (sessionData[i][16] / sessionData[i][2]) * (sessionData[i][17] / totalTime);
-            }
-            else
-            {
-                Debug.Log("Zeroed");
-                output[0][i] = 0;
-                output[1][i] = 0;
-                output[2][i] = 0;
-            }
-        }
-        return output;
-    }*/
+    const string DB_name = "/DB_Official.db";
 
     double[][] GetWeaponPreferences(double[][] sessionData)
     {
@@ -49,9 +24,16 @@ public class StepwiseRegression {
         {
             double totalTimer = sessionData[i][9] + sessionData[i][13] + sessionData[i][17];
 
-            outputs[0][i] = ((sessionData[i][6] + sessionData[i][7] + sessionData[i][8])/sessionData[i][4]) * sessionData[i][9];
-            outputs[1][i] = ((sessionData[i][10] + sessionData[i][11] + sessionData[i][12]) / sessionData[i][4]) * sessionData[i][13]; ;
-            outputs[2][i] = ((sessionData[i][14] + sessionData[i][15] + sessionData[i][16]) / sessionData[i][4]) * sessionData[i][17]; ;
+            outputs[0][i] = ((sessionData[i][6] + sessionData[i][7] + sessionData[i][8])/sessionData[i][4]) * (sessionData[i][9] / 3);
+            outputs[1][i] = ((sessionData[i][10] + sessionData[i][11] + sessionData[i][12]) / sessionData[i][4]) * (sessionData[i][13] / 3);
+            outputs[2][i] = ((sessionData[i][14] + sessionData[i][15] + sessionData[i][16]) / sessionData[i][4]) * (sessionData[i][17] / 3);
+
+            // Map the pref scores between 0 and 1.
+            double totalPref = outputs[0][i] + outputs[1][i] + outputs[2][i];
+
+            outputs[0][i] = outputs[0][i] / totalPref;
+            outputs[1][i] = outputs[1][i] / totalPref;
+            outputs[2][i] = outputs[2][i] / totalPref;
         }
 
         return outputs;
@@ -79,7 +61,7 @@ public class StepwiseRegression {
     {
         double[][] inputs = null;
 
-        string connectionString = "URI=file:" + Application.dataPath + "/DB";
+        string connectionString = "URI=file:" + Application.dataPath + DB_name;
         IDbConnection conn = new SqliteConnection(connectionString);
         conn.Open();
 
@@ -110,8 +92,6 @@ public class StepwiseRegression {
                     {
                         newRow[i] = newRow[i] / rowCounter;
                     }
-
-                    
 
                     inputs[iter] = newRow;
                     iter++;
@@ -149,7 +129,7 @@ public class StepwiseRegression {
     {
         double[][] inputs = new double[sessionCount][];
 
-        string connectionString = "URI=file:" + Application.dataPath + "/DB";
+        string connectionString = "URI=file:" + Application.dataPath + DB_name;
         IDbConnection conn = new SqliteConnection(connectionString);
         conn.Open();
 
@@ -177,7 +157,7 @@ public class StepwiseRegression {
 	public void GetModel()
     {
         // Get some base data
-        string connectionString = "URI=file:" + Application.dataPath + "/DB";
+        string connectionString = "URI=file:" + Application.dataPath + DB_name;
         IDbConnection conn = new SqliteConnection(connectionString);
         conn.Open();
 
@@ -203,31 +183,69 @@ public class StepwiseRegression {
 
         reader.Close();
 
-        //GetData();
-        double[][] inputs_Events = GetEventData(sessionCount, columnCount, eventCount);
-        double[][] inputs_Session = GetSessionData(sessionCount);
-        double[][] weaponPref = GetWeaponPreferences(inputs_Session);
+        // Data to get to be sorted to get independent and dependent variables.
+        double[][] inputs_Events = GetEventData(sessionCount, columnCount, eventCount);     // independent 
+        double[][] inputs_Session = GetSessionData(sessionCount);                           // independent
+        double[][] weaponPrefs = GetWeaponPreferences(inputs_Session);                      // dependent
 
-        for(int i = 0; i < inputs_Session.Length; i++)
+        // Stores the dependent variables for each of the different weapons.
+        double[] AR_pref = new double[inputs_Session.Length];
+        double[] shotgun_pref = new double[inputs_Session.Length];
+        double[] sniper_pref = new double[inputs_Session.Length];
+
+        // Store the combined independent variables.
+        double[][] inputs = new double[sessionCount][];
+
+        for(int i = 0; i < inputs.Length; i++)
         {
-            Debug.Log("Session " + i);
-            string outty = "AR pref: " + weaponPref[0][i] + " Shot pref: " + weaponPref[1][i] + " Sniper pref: " + weaponPref[2][i];
-            Debug.Log(outty);
-            outty = "";
-            for(int j = 0; j < inputs_Session.Length; j++)
+            double[] newRow = new double[inputs_Events[i].Length + inputs_Session[i].Length];
+            // Add the events data.
+            for(int j = 0; j < inputs_Events[i].Length - 1; j++)
             {
-                outty += inputs_Session[i][j] + ", ";
+                newRow[j] = inputs_Events[i][j];
             }
-            Debug.Log(outty);
+            // Add the session data.
+            for(int j = 0; j < inputs_Session[i].Length; j++)
+            {
+                newRow[j + inputs_Events[i].Length - 1] = inputs_Session[i][j];
+            }
+            inputs[i] = newRow;
         }
 
-        /*var testRegression = new StepwiseLogisticRegressionAnalysis(inputs, outputs[0]);
+        // Read weapon prefs into individual arrays.
+        for(int i = 0; i < inputs_Session.Length; i++)
+        {
+            AR_pref[i] = weaponPrefs[0][i];
+            shotgun_pref[i] = weaponPrefs[1][i];
+            sniper_pref[i] = weaponPrefs[2][i];
+        }
 
-        testRegression.Learn(inputs, outputs[0]);
+        // AR model
+        var AR_regression = new StepwiseLogisticRegressionAnalysis(inputs, AR_pref);
+
+        AR_regression.Learn(inputs, AR_pref);
         
-        StepwiseLogisticRegressionModel best = testRegression.Current;
+        StepwiseLogisticRegressionModel AR_bestModel = AR_regression.Current;
 
-        Debug.Log(best.ChiSquare + " chi");*/
+        Debug.Log(AR_bestModel.ChiSquare + " chi for AR");
+
+        // Shotgun model
+        var S_regression = new StepwiseLogisticRegressionAnalysis(inputs, shotgun_pref);
+
+        S_regression.Learn(inputs, shotgun_pref);
+
+        StepwiseLogisticRegressionModel S_bestModel = S_regression.Current;
+
+        Debug.Log(S_bestModel.ChiSquare + " chi for Shotgun");
+
+        // Sniper model
+        var SR_regression = new StepwiseLogisticRegressionAnalysis(inputs, shotgun_pref);
+
+        SR_regression.Learn(inputs, sniper_pref);
+
+        StepwiseLogisticRegressionModel SR_bestModel = SR_regression.Current;
+
+        Debug.Log(SR_bestModel.ChiSquare + " chi for Sniper");
 
     }
 }
