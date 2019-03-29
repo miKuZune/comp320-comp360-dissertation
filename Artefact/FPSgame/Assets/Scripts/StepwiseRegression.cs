@@ -15,6 +15,10 @@ public class StepwiseRegression {
 
     const string DB_name = "/DB_Official.db";
 
+    double[] AR_model_Coeffs;
+    double[] Shotgun_model_Coeffs;
+    double[] Sniper_model_Coeffs;
+
     double[][] GetWeaponPreferences(double[][] sessionData)
     {
         double[][] outputs = new double[3][];
@@ -223,29 +227,132 @@ public class StepwiseRegression {
         // AR model
         var AR_regression = new StepwiseLogisticRegressionAnalysis(inputs, AR_pref);
 
-        AR_regression.Learn(inputs, AR_pref);
-        
-        StepwiseLogisticRegressionModel AR_bestModel = AR_regression.Current;
+        //AR_regression.Learn(inputs, AR_pref);
+
+        for(int i = 0; i < 2; i++)
+        {
+            AR_regression.DoStep();
+        }
+
+        AR_model_Coeffs = new double[inputs[0].Length];
+        Shotgun_model_Coeffs = new double[inputs[0].Length];
+        Sniper_model_Coeffs = new double[inputs[0].Length];
+
+        StepwiseLogisticRegressionModel AR_bestModel = AR_regression.Complete;
 
         Debug.Log(AR_bestModel.ChiSquare + " chi for AR");
 
+        // Build the AR model.
+        for(int i = 0; i < AR_bestModel.CoefficientValues.Length - 1; i++)
+        {
+            if (AR_bestModel.CoefficientValues[i] > 0.1f) { AR_model_Coeffs[i] = AR_bestModel.CoefficientValues[i]; }
+            else { AR_model_Coeffs[i] = 0; }
+        }
+
+        
         // Shotgun model
         var S_regression = new StepwiseLogisticRegressionAnalysis(inputs, shotgun_pref);
 
         S_regression.Learn(inputs, shotgun_pref);
 
-        StepwiseLogisticRegressionModel S_bestModel = S_regression.Current;
+        StepwiseLogisticRegressionModel S_bestModel = S_regression.Complete;
 
         Debug.Log(S_bestModel.ChiSquare + " chi for Shotgun");
+
+        string outty = "Shotgun model: ";
+        // Build the shotgun model
+        for (int i = 0; i < S_bestModel.CoefficientValues.Length - 1; i++)
+        {
+            int curr = i + 1;
+            outty += "(x" + curr + " * ";
+            if (S_bestModel.CoefficientValues[i] > 0.1f) { Shotgun_model_Coeffs[i] = S_bestModel.CoefficientValues[i]; }
+            else { Shotgun_model_Coeffs[i] = 0; }
+            outty += Shotgun_model_Coeffs[i] + "), ";
+        }
+        Debug.Log(outty);
 
         // Sniper model
         var SR_regression = new StepwiseLogisticRegressionAnalysis(inputs, shotgun_pref);
 
         SR_regression.Learn(inputs, sniper_pref);
 
-        StepwiseLogisticRegressionModel SR_bestModel = SR_regression.Current;
+        StepwiseLogisticRegressionModel SR_bestModel = SR_regression.Complete;
 
         Debug.Log(SR_bestModel.ChiSquare + " chi for Sniper");
 
+        // Build sniper model
+        for (int i = 0; i < SR_bestModel.CoefficientValues.Length - 1; i++)
+        {
+            if (SR_bestModel.CoefficientValues[i] > 0.1f) { Sniper_model_Coeffs[i] = SR_bestModel.CoefficientValues[i]; }
+            else { Sniper_model_Coeffs[i] = 0; }
+        }
+
+
+
+
+        //double[] testThing = new double[] { 3, 13.35, 5.24, 0, 126, 63, 189, 4, 21, 0, 125, 60, 133.13, 0, 0, 2, 6.82, 0, 1, 1, 12.13, 0 };
+
+        for(int i = 0; i < inputs.Length; i++)
+        {
+            Debug.Log("NEW SESSION: " + (i + 1));
+            Debug.Log("AR predict: " + PredictARPref(inputs[i]));
+            Debug.Log("Shotgun predict: " + PredictShotgunPref(inputs[i]));
+            Debug.Log("Sniper predict: " + PredictSniperPref(inputs[i]));
+        }
+
+        
+    }
+
+    public double PredictARPref(double[] inputs)
+    {
+        if (!ValidatePredictionVariables(inputs, AR_model_Coeffs)) { Debug.Log("ERROR: inputs not valid"); return 0; }
+        double output = 0;
+
+        
+
+        for(int i =0; i < AR_model_Coeffs.Length; i++ )
+        {
+            output += inputs[i] * AR_model_Coeffs[i];
+        }
+
+        return output;
+    }
+
+    public double PredictShotgunPref(double[] inputs)
+    {
+        if (!ValidatePredictionVariables(inputs, Shotgun_model_Coeffs)) { Debug.Log("ERROR: inputs not valid"); return 0; }
+        double output = 0;
+
+
+
+        for (int i = 0; i < Shotgun_model_Coeffs.Length; i++)
+        {
+            output += inputs[i] * Shotgun_model_Coeffs[i];
+        }
+
+        return output;
+    }
+
+    public double PredictSniperPref(double[] inputs)
+    {
+        if (!ValidatePredictionVariables(inputs, Sniper_model_Coeffs)) { Debug.Log("ERROR: inputs not valid"); return 0; }
+        double output = 0;
+
+
+
+        for (int i = 0; i < Sniper_model_Coeffs.Length; i++)
+        {
+            output += inputs[i] * Sniper_model_Coeffs[i];
+        }
+
+        return output;
+    }
+
+    bool ValidatePredictionVariables(double[] inputs, double[] model)
+    {
+        if (inputs.Length != model.Length) { Debug.Log("lengths - Inputs: " + inputs.Length + "; Model: " + model.Length); return false; }
+
+
+        return true;
     }
 }
