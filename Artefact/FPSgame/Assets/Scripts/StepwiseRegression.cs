@@ -19,148 +19,9 @@ public class StepwiseRegression {
     double[] Shotgun_model_Coeffs;
     double[] Sniper_model_Coeffs;
 
-    double[][] GetWeaponPreferences(double[][] sessionData)
+    public void GetModel()
     {
-        double[][] outputs = new double[3][];
-        for (int i = 0; i < outputs.Length; i++) { outputs[i] = new double[sessionData.Length]; }
-
-        for(int i = 0; i < sessionData.Length; i++)
-        {
-            double totalTimer = sessionData[i][9] + sessionData[i][13] + sessionData[i][17];
-
-            outputs[0][i] = ((sessionData[i][6] + sessionData[i][7] + sessionData[i][8])/sessionData[i][4]) * (sessionData[i][9] / 3);
-            outputs[1][i] = ((sessionData[i][10] + sessionData[i][11] + sessionData[i][12]) / sessionData[i][4]) * (sessionData[i][13] / 3);
-            outputs[2][i] = ((sessionData[i][14] + sessionData[i][15] + sessionData[i][16]) / sessionData[i][4]) * (sessionData[i][17] / 3);
-
-            // Map the pref scores between 0 and 1.
-            double totalPref = outputs[0][i] + outputs[1][i] + outputs[2][i];
-
-            outputs[0][i] = outputs[0][i] / totalPref;
-            outputs[1][i] = outputs[1][i] / totalPref;
-            outputs[2][i] = outputs[2][i] / totalPref;
-        }
-
-        return outputs;
-    }
-
-    int ConvertToGunID(string gunName)
-    {
-        int ID = 0;
-        switch (gunName)
-        {
-            case "Shotgun":
-                ID = 2;
-                break;
-            case "Sniper Rifle":
-                ID = 3;
-                break;
-            case "Assult Rifle":
-                ID = 1;
-                break;
-        }
-        return ID;
-    }
-
-    double[][] GetEventData(int sessionCount, int columnCount, int eventCount)
-    {
-        double[][] inputs = null;
-
-        string connectionString = "URI=file:" + Application.dataPath + DB_name;
-        IDbConnection conn = new SqliteConnection(connectionString);
-        conn.Open();
-
-        IDbCommand comm = conn.CreateCommand();
-        string query = "SELECT * FROM Events";
-        comm.CommandText = query;
-        IDataReader reader = comm.ExecuteReader();
-
-        
-        inputs = new double[sessionCount][];
-
-        int iter = 0;
-        UnityTime UT = new UnityTime();
-
-
-        List<int> sessionIDs = new List<int>();
-        double[] newRow = null;
-        int rowCounter = 0;
-        while (reader.Read())
-        {
-            if (!sessionIDs.Contains(reader.GetInt32(1)))
-            {
-                sessionIDs.Add(reader.GetInt32(1));
-
-                if(newRow != null)
-                {
-                    for(int i = 0; i < newRow.Length;i++)
-                    {
-                        newRow[i] = newRow[i] / rowCounter;
-                    }
-
-                    inputs[iter] = newRow;
-                    iter++;
-                }
-                rowCounter = 0;
-
-                newRow = new double[columnCount];
-            }
-
-            for (int i = 0; i < columnCount; i++)
-            {
-                
-                switch(reader.GetName(i + 2))
-                {
-                    case "KillWeapon":
-                        newRow[i] += ConvertToGunID(reader.GetString(i + 2));
-                        break;
-                    case "TimeStamp":
-                        newRow[i] += UT.ConvertToSeconds(reader.GetString(i + 2));
-                        break;
-                    default:
-                        newRow[i] += reader.GetDouble(i + 2);
-                        break;
-                }
-            }
-            rowCounter++;
-        }
-        inputs[iter] = newRow;
-        reader.Close();
-
-        return inputs;
-    }
-
-    double[][] GetSessionData(int sessionCount)
-    {
-        double[][] inputs = new double[sessionCount][];
-
-        string connectionString = "URI=file:" + Application.dataPath + DB_name;
-        IDbConnection conn = new SqliteConnection(connectionString);
-        conn.Open();
-
-        IDbCommand comm = conn.CreateCommand();
-        string query = "SELECT * FROM SessionData";
-        comm.CommandText = query;
-        IDataReader reader = comm.ExecuteReader();
-
-        int columnCount = reader.FieldCount - 1;
-        int iter = 0;
-        while(reader.Read())
-        {
-            double[] newRow = new double[columnCount];
-            for(int i = 0; i < columnCount; i++)
-            {
-                newRow[i] = reader.GetDouble(i + 1);
-            }
-            inputs[iter] = newRow;
-            iter++;
-        }
-
-        return inputs;
-    }
-
-	public void GetModel()
-    {
-        // Get some base data
+        // Counting data like how many sessions are there.
         string connectionString = "URI=file:" + Application.dataPath + DB_name;
         IDbConnection conn = new SqliteConnection(connectionString);
         conn.Open();
@@ -184,7 +45,6 @@ public class StepwiseRegression {
                 sessionCount++;
             }
         }
-
         reader.Close();
 
         // Data to get to be sorted to get independent and dependent variables.
@@ -199,17 +59,17 @@ public class StepwiseRegression {
 
         // Store the combined independent variables.
         double[][] inputs = new double[sessionCount][];
-
-        for(int i = 0; i < inputs.Length; i++)
+        // Combine the events and the session data into the one array.
+        for (int i = 0; i < inputs.Length; i++)
         {
             double[] newRow = new double[inputs_Events[i].Length + inputs_Session[i].Length];
             // Add the events data.
-            for(int j = 0; j < inputs_Events[i].Length - 1; j++)
+            for (int j = 0; j < inputs_Events[i].Length - 1; j++)
             {
                 newRow[j] = inputs_Events[i][j];
             }
             // Add the session data.
-            for(int j = 0; j < inputs_Session[i].Length; j++)
+            for (int j = 0; j < inputs_Session[i].Length; j++)
             {
                 newRow[j + inputs_Events[i].Length - 1] = inputs_Session[i][j];
             }
@@ -217,139 +77,247 @@ public class StepwiseRegression {
         }
 
         // Read weapon prefs into individual arrays.
-        for(int i = 0; i < inputs_Session.Length; i++)
+        for (int i = 0; i < inputs_Session.Length; i++)
         {
             AR_pref[i] = weaponPrefs[0][i];
             shotgun_pref[i] = weaponPrefs[1][i];
             sniper_pref[i] = weaponPrefs[2][i];
         }
 
-        // AR model
-        var AR_regression = new StepwiseLogisticRegressionAnalysis(inputs, AR_pref);
+        // Get the prediction models for each of the weapon preferences.
+        Debug.Log("Get AR model pref");
+        AR_model_Coeffs = GetWeaponPreferenceModel(inputs, AR_pref);
+        Debug.Log("Get shotgun model pref");
+        Shotgun_model_Coeffs = GetWeaponPreferenceModel(inputs, shotgun_pref);
+        Debug.Log("Get sniper model pref");
+        Sniper_model_Coeffs = GetWeaponPreferenceModel(inputs, sniper_pref);
 
-        //AR_regression.Learn(inputs, AR_pref);
 
-        for(int i = 0; i < 2; i++)
+
+        for (int i = 0; i < inputs.Length; i++)
         {
-            AR_regression.DoStep();
+            Debug.Log("NEW SESSION: " + (i + 1));
+            Debug.Log("AR predict: " + PredictWeaponPref("AR", inputs[i]));
+            Debug.Log("Shotgun predict: " + PredictWeaponPref("Shotgun", inputs[i]));
+            Debug.Log("Sniper predict: " + PredictWeaponPref("Sniper", inputs[i]));
+        }
+    }
+    // Calculates a human designed way of getting a player's weapon preference.
+    double[][] GetWeaponPreferences(double[][] sessionData)
+    {
+        double[][] outputs = new double[3][];
+        for (int i = 0; i < outputs.Length; i++) { outputs[i] = new double[sessionData.Length]; }
+
+        for(int i = 0; i < sessionData.Length; i++)
+        {
+            double totalTimer = sessionData[i][9] + sessionData[i][13] + sessionData[i][17];
+
+            outputs[0][i] = ((sessionData[i][6] + sessionData[i][7] + sessionData[i][8])/sessionData[i][4]) * (sessionData[i][9] / 3);
+            outputs[1][i] = ((sessionData[i][10] + sessionData[i][11] + sessionData[i][12]) / sessionData[i][4]) * (sessionData[i][13] / 3);
+            outputs[2][i] = ((sessionData[i][14] + sessionData[i][15] + sessionData[i][16]) / sessionData[i][4]) * (sessionData[i][17] / 3);
+
+            // Map the pref scores between 0 and 1.
+            double totalPref = outputs[0][i] + outputs[1][i] + outputs[2][i];
+
+            outputs[0][i] = outputs[0][i] / totalPref;
+            outputs[1][i] = outputs[1][i] / totalPref;
+            outputs[2][i] = outputs[2][i] / totalPref;
         }
 
-        AR_model_Coeffs = new double[inputs[0].Length];
-        Shotgun_model_Coeffs = new double[inputs[0].Length];
-        Sniper_model_Coeffs = new double[inputs[0].Length];
-
-        StepwiseLogisticRegressionModel AR_bestModel = AR_regression.Complete;
-
-        Debug.Log(AR_bestModel.ChiSquare + " chi for AR");
-
-        // Build the AR model.
-        for(int i = 0; i < AR_bestModel.CoefficientValues.Length - 1; i++)
+        return outputs;
+    }
+    // Convert the name of a gun into it's appropriate gunID.
+    int ConvertToGunID(string gunName)
+    {
+        int ID = 0;
+        switch (gunName)
         {
-            if (AR_bestModel.CoefficientValues[i] > 0.1f) { AR_model_Coeffs[i] = AR_bestModel.CoefficientValues[i]; }
-            else { AR_model_Coeffs[i] = 0; }
+            case "Shotgun":
+                ID = 2;
+                break;
+            case "Sniper Rifle":
+                ID = 3;
+                break;
+            case "Assult Rifle":
+                ID = 1;
+                break;
         }
+        return ID;
+    }
+    // Returns the mean event data for each session in the database.
+    double[][] GetEventData(int sessionCount, int columnCount, int eventCount)
+    {
+        double[][] eventData = null;
 
-        
-        // Shotgun model
-        var S_regression = new StepwiseLogisticRegressionAnalysis(inputs, shotgun_pref);
+        // Read from database.
+        string connectionString = "URI=file:" + Application.dataPath + DB_name;
+        IDbConnection conn = new SqliteConnection(connectionString);
+        conn.Open();
 
-        S_regression.Learn(inputs, shotgun_pref);
+        IDbCommand comm = conn.CreateCommand();
+        string query = "SELECT * FROM Events";
+        comm.CommandText = query;
+        IDataReader reader = comm.ExecuteReader();
 
-        StepwiseLogisticRegressionModel S_bestModel = S_regression.Complete;
+        eventData = new double[sessionCount][];
 
-        Debug.Log(S_bestModel.ChiSquare + " chi for Shotgun");
+        int sessionCounter = 0;   
+        int rowCounter = 0;
+        string previousTimeStamp = "";
+        List<int> sessionIDs = new List<int>();
+        UnityTime UT = new UnityTime();
 
-        string outty = "Shotgun model: ";
-        // Build the shotgun model
-        for (int i = 0; i < S_bestModel.CoefficientValues.Length - 1; i++)
+        double[] newRow = null; // Stores cumulative session data. Is averaged and then stored in the array to be output when a new session is found. 
+        while (reader.Read())
         {
-            int curr = i + 1;
-            outty += "(x" + curr + " * ";
-            if (S_bestModel.CoefficientValues[i] > 0.1f) { Shotgun_model_Coeffs[i] = S_bestModel.CoefficientValues[i]; }
-            else { Shotgun_model_Coeffs[i] = 0; }
-            outty += Shotgun_model_Coeffs[i] + "), ";
+            // Check for a new session.
+            if (!sessionIDs.Contains(reader.GetInt32(1)))
+            {
+                sessionIDs.Add(reader.GetInt32(1));
+
+                if(newRow != null)
+                {
+                    // Aveage the data stored on the previous session and store in the array to be output.
+                    eventData[sessionCounter] = MakeRowValuesMean(newRow, rowCounter);
+                    sessionCounter++;
+                }
+                // Reset variables.
+                rowCounter = 0;
+                newRow = new double[columnCount];
+            }
+            // Store row data.
+            for (int i = 0; i < columnCount; i++)
+            {
+                switch(reader.GetName(i + 2))
+                {
+                    case "KillWeapon":
+                        newRow[i] += ConvertToGunID(reader.GetString(i + 2));
+                        break;
+                    case "TimeStamp":
+                        newRow[i] += UT.ConvertToSeconds(reader.GetString(i + 2)) - UT.ConvertToSeconds(previousTimeStamp);
+                        previousTimeStamp = reader.GetString(i + 2);
+                        break;
+                    default:
+                        newRow[i] += reader.GetDouble(i + 2);
+                        break;
+                }
+            }
+            rowCounter++;
+        }
+        eventData[sessionCounter] = MakeRowValuesMean(newRow, rowCounter);             // Add leftover averaged session data.
+        reader.Close();
+
+        return eventData;
+    }
+    // Return an average of a given array
+    double[] MakeRowValuesMean(double[] data, int rowCount)
+    {
+        for(int i = 0; i < data.Length; i++)
+        {
+            data[i] = data[i] / rowCount;
+        }
+        return data;
+    }
+    // Return the data from the session table.
+    double[][] GetSessionData(int sessionCount)
+    {
+        double[][] inputs = new double[sessionCount][];
+
+        string connectionString = "URI=file:" + Application.dataPath + DB_name;
+        IDbConnection conn = new SqliteConnection(connectionString);
+        conn.Open();
+
+        IDbCommand comm = conn.CreateCommand();
+        string query = "SELECT * FROM SessionData";
+        comm.CommandText = query;
+        IDataReader reader = comm.ExecuteReader();
+
+        int columnCount = reader.FieldCount - 1;
+        int sessionCounter = 0;
+        while(reader.Read())
+        {
+            double[] newRow = new double[columnCount];
+            for(int i = 0; i < columnCount; i++)
+            {
+                newRow[i] = reader.GetDouble(i + 1);
+            }
+            inputs[sessionCounter] = newRow;
+            sessionCounter++;
+        }
+        return inputs;
+    }
+
+    // Takes the inputs and outputs and prodcues an array containg the resulting coefficients.
+    double[] GetWeaponPreferenceModel(double[][] inputs, double[] outputs)
+    {
+        double[] coefficients = new double[inputs[0].Length];
+
+        // Use Accord.net's stepwise regression algorithm on the data.
+        var regression = new StepwiseLogisticRegressionAnalysis(inputs, outputs);
+        regression.Learn(inputs, outputs);
+        StepwiseLogisticRegressionModel model = regression.Complete;
+
+        string outty = "Coeffs: ";
+        for(int i = 0; i < coefficients.Length; i++)
+        {
+            // Check if the leftover coefficient is signifigant as the accord.net library do not sort the insignifgant ones out 
+            //of the model at the stage they are being taken from.
+            if (model.CoefficientValues[i] > 0.1f) { coefficients[i] = model.CoefficientValues[i]; }
+            else { coefficients[i] = 0; }
+            outty += coefficients[i] + ", ";
         }
         Debug.Log(outty);
 
-        // Sniper model
-        var SR_regression = new StepwiseLogisticRegressionAnalysis(inputs, shotgun_pref);
-
-        SR_regression.Learn(inputs, sniper_pref);
-
-        StepwiseLogisticRegressionModel SR_bestModel = SR_regression.Complete;
-
-        Debug.Log(SR_bestModel.ChiSquare + " chi for Sniper");
-
-        // Build sniper model
-        for (int i = 0; i < SR_bestModel.CoefficientValues.Length - 1; i++)
-        {
-            if (SR_bestModel.CoefficientValues[i] > 0.1f) { Sniper_model_Coeffs[i] = SR_bestModel.CoefficientValues[i]; }
-            else { Sniper_model_Coeffs[i] = 0; }
-        }
-
-
-
-
-        //double[] testThing = new double[] { 3, 13.35, 5.24, 0, 126, 63, 189, 4, 21, 0, 125, 60, 133.13, 0, 0, 2, 6.82, 0, 1, 1, 12.13, 0 };
-
-        for(int i = 0; i < inputs.Length; i++)
-        {
-            Debug.Log("NEW SESSION: " + (i + 1));
-            Debug.Log("AR predict: " + PredictARPref(inputs[i]));
-            Debug.Log("Shotgun predict: " + PredictShotgunPref(inputs[i]));
-            Debug.Log("Sniper predict: " + PredictSniperPref(inputs[i]));
-        }
-
-        
+        return coefficients;
     }
 
-    public double PredictARPref(double[] inputs)
+    // Use the machine learned models to predict the weapon preference of a given weapon.
+    public double PredictWeaponPref(string weapon, double[] inputs)
     {
-        if (!ValidatePredictionVariables(inputs, AR_model_Coeffs)) { Debug.Log("ERROR: inputs not valid"); return 0; }
-        double output = 0;
-
-        
-
-        for(int i =0; i < AR_model_Coeffs.Length; i++ )
+        // Check the inputs are valid with each of the models.
+        if (!ValidatePredictionVariables(inputs, AR_model_Coeffs) || 
+            !ValidatePredictionVariables(inputs, Shotgun_model_Coeffs) ||!ValidatePredictionVariables(inputs, Sniper_model_Coeffs))
         {
-            output += inputs[i] * AR_model_Coeffs[i];
+            Debug.Log("Input not valid");
+            return 0;
         }
 
-        return output;
-    }
+        double weaponPreferenceScore = 0;
 
-    public double PredictShotgunPref(double[] inputs)
-    {
-        if (!ValidatePredictionVariables(inputs, Shotgun_model_Coeffs)) { Debug.Log("ERROR: inputs not valid"); return 0; }
-        double output = 0;
-
-
-
-        for (int i = 0; i < Shotgun_model_Coeffs.Length; i++)
+        double[] coeffs = null;
+        // Decide which model to use to calculate the score.
+        switch(weapon)
         {
-            output += inputs[i] * Shotgun_model_Coeffs[i];
+            case "AR":
+                coeffs = AR_model_Coeffs;
+                break;
+            case "Shotgun":
+                coeffs = Shotgun_model_Coeffs;
+                break;
+            case "Sniper":
+                coeffs = Sniper_model_Coeffs;
+                break;
+            default:
+                Debug.Log("Not a valid weapon.");
+                break;
         }
 
-        return output;
-    }
-
-    public double PredictSniperPref(double[] inputs)
-    {
-        if (!ValidatePredictionVariables(inputs, Sniper_model_Coeffs)) { Debug.Log("ERROR: inputs not valid"); return 0; }
-        double output = 0;
-
-
-
-        for (int i = 0; i < Sniper_model_Coeffs.Length; i++)
+        // Calculate the weapon prefernce.
+        for(int i = 0; i < coeffs.Length; i++)
         {
-            output += inputs[i] * Sniper_model_Coeffs[i];
+            weaponPreferenceScore += (inputs[i] * coeffs[i]);
         }
 
-        return output;
+        return weaponPreferenceScore;    
     }
-
+    // Validates the given inputs and model for predicting weapon preference.
     bool ValidatePredictionVariables(double[] inputs, double[] model)
     {
+        // Pressence checks.
+        if (inputs == null) { Debug.Log("Inputs are missing"); return false; }
+        if (model == null) { Debug.Log("Model is missing"); return false; }
+
+        // Check if the inputs and model are compatible with each other.
         if (inputs.Length != model.Length) { Debug.Log("lengths - Inputs: " + inputs.Length + "; Model: " + model.Length); return false; }
 
 
