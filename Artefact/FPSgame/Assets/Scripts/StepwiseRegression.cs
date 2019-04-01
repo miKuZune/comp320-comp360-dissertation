@@ -94,13 +94,13 @@ public class StepwiseRegression {
 
 
 
-        for (int i = 0; i < inputs.Length; i++)
+        /*for (int i = 0; i < inputs.Length; i++)
         {
             Debug.Log("NEW SESSION: " + (i + 1));
             Debug.Log("AR predict: " + PredictWeaponPref("AR", inputs[i]));
             Debug.Log("Shotgun predict: " + PredictWeaponPref("Shotgun", inputs[i]));
             Debug.Log("Sniper predict: " + PredictWeaponPref("Sniper", inputs[i]));
-        }
+        }*/
     }
     // Calculates a human designed way of getting a player's weapon preference.
     double[][] GetWeaponPreferences(double[][] sessionData)

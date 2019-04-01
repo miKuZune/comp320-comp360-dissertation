@@ -161,6 +161,8 @@ public class DatabaseManager : MonoBehaviour
 
 
         currSessionEventData.Add(newData);
+
+        OutputPredictedWeaponPrefs();
     }
 
     public void InsertAllData()
@@ -201,6 +203,78 @@ public class DatabaseManager : MonoBehaviour
 
         dbConn.Close();
         Debug.Log("entered data");
+    }
+
+    void OutputPredictedWeaponPrefs()
+    {
+        string previousTime = "";
+        UnityTime uTime = new UnityTime();
+
+        double[] averagedEventData = new double[4];
+
+        // Collect the total of the current existing event data.
+        for (int i = 0; i < currSessionEventData.Count; i++)
+        {
+            averagedEventData[0] += ConvertToGunID(currSessionEventData[i].killWeapon);
+            averagedEventData[1] += currSessionEventData[i].distance;
+            averagedEventData[2] += currSessionEventData[i].killTime;
+            averagedEventData[3] += uTime.ConvertToSeconds(currSessionEventData[i].timeStamp) - uTime.ConvertToSeconds(previousTime);
+
+            previousTime = currSessionEventData[i].timeStamp;
+        }
+
+        double[] inputData = new double[22];            // Store all the data necessary for the prediction model.
+
+        // Get the mean of the event data and add it to the input data for the prediction model.
+        for (int i = 0; i < averagedEventData.Length; i++)
+        { 
+            inputData[i] = averagedEventData[i] / currSessionEventData.Count;
+        }
+
+        // Ahhh this is gonna be messy and bad.
+        inputData[4] = currSessionData.head_shots;
+        inputData[5] = currSessionData.body_shots;
+        inputData[6] = currSessionData.missed_shots;
+        inputData[7] = currSessionData.total_shots;
+        inputData[8] = currSessionData.endRound;
+        inputData[9] = currSessionData.enemiesKilled;
+        inputData[10] = currSessionData.AR_head_shots;
+        inputData[11] = currSessionData.AR_body_shots;
+        inputData[12] = currSessionData.AR_missed_shots;
+        inputData[13] = currSessionData.AR_timeHeld;
+        inputData[14] = currSessionData.S_head_shots;
+        inputData[15] = currSessionData.S_body_shots;
+        inputData[16] = currSessionData.S_missed_shots;
+        inputData[17] = currSessionData.S_timeHeld;
+        inputData[18] = currSessionData.SR_body_shots;
+        inputData[19] = currSessionData.SR_head_shots;
+        inputData[20] = currSessionData.SR_missed_shots;
+        inputData[21] = currSessionData.SR_timeHeld;
+
+
+        string outty = "Weapon prefs; AR: " + GameManager.instance.stepwiseRegression.PredictWeaponPref("AR", inputData);
+        outty += "; Shotgun: " + GameManager.instance.stepwiseRegression.PredictWeaponPref("Shotgun", inputData);
+        outty += "; Sniper: " + GameManager.instance.stepwiseRegression.PredictWeaponPref("Sniper", inputData);
+        Debug.Log(outty);
+
+    }
+
+    int ConvertToGunID(string gunName)
+    {
+        int ID = 0;
+        switch (gunName)
+        {
+            case "Shotgun":
+                ID = 2;
+                break;
+            case "Sniper Rifle":
+                ID = 3;
+                break;
+            case "Assult Rifle":
+                ID = 1;
+                break;
+        }
+        return ID;
     }
 }
 

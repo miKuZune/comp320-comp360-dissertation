@@ -40,17 +40,13 @@ public class GameManager : MonoBehaviour {
     [HideInInspector]
     public float timeSinceStart = 0;
 
+    public StepwiseRegression stepwiseRegression;
+
     void Awake()
     {
         // Ensures there is only one instance of this script.
         if (instance == null) { instance = this; }
         else { Destroy(this.gameObject); }
-    }
-
-    public void GetModel()
-    {
-        StepwiseRegression SR = new StepwiseRegression();
-        SR.GetModel();
     }
 
     // Use this for initialization
@@ -66,7 +62,15 @@ public class GameManager : MonoBehaviour {
         NextRound();
 
         timeSinceStart = 57;
-        
+
+        GetModel();
+    }
+
+    public void GetModel()
+    {
+        // Create the stepwise regression object and get the model.
+        stepwiseRegression = new StepwiseRegression();
+        stepwiseRegression.GetModel();
     }
 
     public void ToggleMouse()
