@@ -252,9 +252,13 @@ public class DatabaseManager : MonoBehaviour
         inputData[21] = currSessionData.SR_timeHeld;
 
 
-        string outty = "Weapon prefs; AR: " + GameManager.instance.stepwiseRegression.PredictWeaponPref("AR", inputData);
-        outty += "; Shotgun: " + GameManager.instance.stepwiseRegression.PredictWeaponPref("Shotgun", inputData);
-        outty += "; Sniper: " + GameManager.instance.stepwiseRegression.PredictWeaponPref("Sniper", inputData);
+        GameManager.instance.AR_wep_pref = GameManager.instance.stepwiseRegression.PredictWeaponPref("AR", inputData);
+        GameManager.instance.Shotgun_wep_pref = GameManager.instance.stepwiseRegression.PredictWeaponPref("Shotgun", inputData);
+        GameManager.instance.Sniper_wep_pref = GameManager.instance.stepwiseRegression.PredictWeaponPref("Sniper", inputData);
+
+        string outty = "Weapon prefs; AR: " + GameManager.instance.AR_wep_pref;
+        outty += "; Shotgun: " + GameManager.instance.Shotgun_wep_pref;
+        outty += "; Sniper: " + GameManager.instance.Sniper_wep_pref;
         Debug.Log(outty);
 
     }

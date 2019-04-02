@@ -38,7 +38,17 @@ public class GameManager : MonoBehaviour {
     int randSpawnOffsetMax;
 
     [HideInInspector]
+    public double AR_wep_pref = 0;
+    [HideInInspector]
+    public double Shotgun_wep_pref = 0;
+    [HideInInspector]
+    public double Sniper_wep_pref = 0;
+
+    [Header("Machine Learning settings")]
+    [HideInInspector]
     public float timeSinceStart = 0;
+
+    public bool mapWeaponPrefsAsPercentage = true;
 
     public StepwiseRegression stepwiseRegression;
 
@@ -64,6 +74,8 @@ public class GameManager : MonoBehaviour {
         timeSinceStart = 57;
 
         GetModel();
+
+        stepwiseRegression.MapPreferencesAsPercentage(mapWeaponPrefsAsPercentage);
     }
 
     public void GetModel()

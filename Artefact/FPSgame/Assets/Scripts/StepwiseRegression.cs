@@ -19,6 +19,12 @@ public class StepwiseRegression {
     double[] Shotgun_model_Coeffs;
     double[] Sniper_model_Coeffs;
 
+    double highestAR_score;
+    double highestShotgun_score;
+    double highestSniper_score;
+
+    bool mapPreferencesToPercentage = false;
+
     public void GetModel()
     {
         // Counting data like how many sessions are there.
@@ -93,14 +99,18 @@ public class StepwiseRegression {
         Sniper_model_Coeffs = GetWeaponPreferenceModel(inputs, sniper_pref);
 
 
-
-        /*for (int i = 0; i < inputs.Length; i++)
+        // Find the highest score in the data so that a percentage of the highest can be calcualted.
+        for (int i = 0; i < inputs.Length; i++)
         {
-            Debug.Log("NEW SESSION: " + (i + 1));
-            Debug.Log("AR predict: " + PredictWeaponPref("AR", inputs[i]));
-            Debug.Log("Shotgun predict: " + PredictWeaponPref("Shotgun", inputs[i]));
-            Debug.Log("Sniper predict: " + PredictWeaponPref("Sniper", inputs[i]));
-        }*/
+            double AR_pref_score = PredictWeaponPref("AR", inputs[i]);
+            if (AR_pref_score > highestAR_score) { highestAR_score = AR_pref_score; }
+
+            double shotgun_pref_score = PredictWeaponPref("Shotgun", inputs[i]);
+            if (shotgun_pref_score > highestShotgun_score) { highestShotgun_score = shotgun_pref_score; }
+
+            double sniper_pref_score = PredictWeaponPref("Sniper", inputs[i]);
+            if (sniper_pref_score > highestSniper_score) { highestSniper_score = sniper_pref_score; }
+        }
     }
     // Calculates a human designed way of getting a player's weapon preference.
     double[][] GetWeaponPreferences(double[][] sessionData)
@@ -308,6 +318,23 @@ public class StepwiseRegression {
             weaponPreferenceScore += (inputs[i] * coeffs[i]);
         }
 
+        if(mapPreferencesToPercentage && highestAR_score != 0 && highestShotgun_score != 0 && highestSniper_score != 0)
+        {
+            switch(weapon)
+            {
+                case "AR":
+                    weaponPreferenceScore = weaponPreferenceScore / highestAR_score;
+                    break;
+                case "Shotgun":
+                    weaponPreferenceScore = weaponPreferenceScore / highestShotgun_score;
+                    break;
+                case "Sniper":
+                    weaponPreferenceScore = weaponPreferenceScore / highestSniper_score;
+                    break;
+            }
+        }
+
+
         return weaponPreferenceScore;    
     }
     // Validates the given inputs and model for predicting weapon preference.
@@ -322,5 +349,10 @@ public class StepwiseRegression {
 
 
         return true;
+    }
+
+    public void MapPreferencesAsPercentage(bool state)
+    {
+        mapPreferencesToPercentage = state;
     }
 }
