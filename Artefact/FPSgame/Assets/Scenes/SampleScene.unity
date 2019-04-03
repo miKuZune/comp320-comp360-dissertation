@@ -33436,7 +33436,19 @@ MonoBehaviour:
   minDistToEnableSpawn: 8.5
   randSpawnOffsetMin: -4
   randSpawnOffsetMax: 4
+  AR_wep_pref: 0
+  Shotgun_wep_pref: 0
+  Sniper_wep_pref: 0
   timeSinceStart: 0
+  mapWeaponPrefsAsPercentage: 1
+  Use_ML_toChangeAI_Profiles: 0
+  AR: {fileID: 11400000, guid: ea0ab9c57ba0b51438799aac054321ff, type: 2}
+  Shotgun: {fileID: 11400000, guid: f818e236c9d488f49805451adff2e913, type: 2}
+  Sniper: {fileID: 11400000, guid: 1aa267cd15f65134ab339a31e692229f, type: 2}
+  AR_Shotgun: {fileID: 11400000, guid: 8c101cff8e6aa6a499ca65b890ba0eea, type: 2}
+  AR_Sniper: {fileID: 11400000, guid: 7a08da816fab27c4c8dbf46d5ef373fd, type: 2}
+  Shotgun_Sniper: {fileID: 11400000, guid: b9e8d73eb6aa4d246ad89fb2578afc14, type: 2}
+  Default: {fileID: 11400000, guid: b2564b73ada6a334283b252294f6cf9f, type: 2}
 --- !u!4 &2113054790
 Transform:
   m_ObjectHideFlags: 0

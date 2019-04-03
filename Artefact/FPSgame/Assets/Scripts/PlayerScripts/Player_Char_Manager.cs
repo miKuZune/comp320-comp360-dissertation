@@ -11,9 +11,22 @@ public class Player_Char_Manager : MonoBehaviour , I_CharManager{
         PM.SetInactive();                           // Stop the player from moving.
         Gun_Manager.instance.SetInactive();         // Stop the player from shooting.
         GameManager.instance.ToggleMouse();         // Show the mouse.
+
+        int currSessionsFinished = PlayerPrefs.GetInt("RoundsFinished");
+        PlayerPrefs.SetInt("RoundsFinished", currSessionsFinished++);
+
         Instantiate(Resources.Load("DeathScreen"), Vector3.zero, Quaternion.identity);          // Bring up the death screen.
 
+
+
+        if (PlayerPrefs.GetInt("RoundsFinished") >= 2)
+        {
+            GameObject.Find("NextSession").SetActive(false);
+        }
+        else { GameObject.Find("ReturnToMainMenu").SetActive(false); }
+
         DatabaseManager.instance.InsertAllData();
+        
     }
 
     public void OnDmg()

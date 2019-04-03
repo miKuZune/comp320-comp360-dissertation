@@ -28,7 +28,6 @@ public class GameManager : MonoBehaviour {
     int currActiveEnemies;                                                                  // Stores the current number of enemies in the scene.
     int enemiesKilledInRound;                                                               // Stores the enemies that have been killed so far in the round.
 
-
     [Header("Spawner settings")]
     [SerializeField]            
     float minDistToEnableSpawn = 8.5f;                                                      // Stores the minimum distance between a spawn point and the player to allow the spawn point to spawn enemies.
@@ -44,13 +43,25 @@ public class GameManager : MonoBehaviour {
     [HideInInspector]
     public double Sniper_wep_pref = 0;
 
-    [Header("Machine Learning settings")]
+    
     [HideInInspector]
     public float timeSinceStart = 0;
 
+    [Header("Machine Learning settings")]
     public bool mapWeaponPrefsAsPercentage = true;
 
+    public bool Use_ML_toChangeAI_Profiles = true;
+
     public StepwiseRegression stepwiseRegression;
+
+    [Header("AI profiles")]
+    public AI_Score_Profile AR;
+    public AI_Score_Profile Shotgun;
+    public AI_Score_Profile Sniper;
+    public AI_Score_Profile AR_Shotgun;
+    public AI_Score_Profile AR_Sniper;
+    public AI_Score_Profile Shotgun_Sniper;
+    public AI_Score_Profile Default;
 
     void Awake()
     {
@@ -68,6 +79,13 @@ public class GameManager : MonoBehaviour {
         SpawnLocations = GameObject.FindGameObjectsWithTag("SpawnLocation");
         EnemyPrefab = (GameObject)Resources.Load("Enemy");
         player = GameObject.FindGameObjectWithTag("Player");
+
+        // Check if the ML should be enabled or not.
+        int enableML = PlayerPrefs.GetInt("enableML");
+        Debug.Log("On start enableML is: " + enableML);
+        if (enableML == 0) { Use_ML_toChangeAI_Profiles = false; }
+        else { Use_ML_toChangeAI_Profiles = true; }
+
         // Starts the first round.
         NextRound();
 
@@ -115,7 +133,8 @@ public class GameManager : MonoBehaviour {
     // Spawn a new enemy.
     void SpawnEnemy()
     {
-        Instantiate(EnemyPrefab, ChooseSpawnLocation(), Quaternion.identity);                   // Creates the enemy. Gets the starting location from another method.
+        GameObject newEnemy = Instantiate(EnemyPrefab, ChooseSpawnLocation(), Quaternion.identity);                   // Creates the enemy. Gets the starting location from another method.
+        ChooseAIProfile();
         currActiveEnemies++;
     }
     // Gets the starting location of an enemy.
@@ -150,6 +169,70 @@ public class GameManager : MonoBehaviour {
         enemiesKilledInRound++;                                 // Ensures that the right number of enemies will be in each round.
         currActiveEnemies--;                                    // Decreased so that a new enemy can be spawned if necessary.
     }
+
+    public void ChooseAIProfile()
+    {
+        if (!Use_ML_toChangeAI_Profiles) { Debug.Log("Feature not enabled."); return; }
+
+        // Calculate the differences.
+        double AR_Shotgun_diff = AR_wep_pref - Shotgun_wep_pref;
+        double AR_Sniper_Diff = AR_wep_pref - Sniper_wep_pref;
+        double Shotgun_Sniper_Diff = Shotgun_wep_pref - Sniper_wep_pref;
+        // Ensure all differences are positive.
+        AR_Shotgun_diff = System.Math.Sqrt(AR_Shotgun_diff * AR_Shotgun_diff);
+        AR_Sniper_Diff = System.Math.Sqrt(AR_Sniper_Diff * AR_Sniper_Diff);
+        Shotgun_Sniper_Diff = System.Math.Sqrt(Shotgun_Sniper_Diff * Shotgun_Sniper_Diff);
+
+        // Look for AR profile
+        if(AR_Shotgun_diff + AR_Sniper_Diff > 0.25f )
+        {
+            Debug.Log("AR profile");
+            SetAIsProfile(AR);
+        }
+        else if(AR_Shotgun_diff + Shotgun_Sniper_Diff > 0.25f )
+        {
+            Debug.Log("Shotgun profile");
+            SetAIsProfile(Shotgun);
+        }
+        else if(AR_Sniper_Diff + Shotgun_Sniper_Diff > 0.25f)
+        {
+            Debug.Log("Sniper profile");
+            SetAIsProfile(Sniper);
+        }
+        else if(AR_Shotgun_diff > 0.25f)
+        {
+            Debug.Log("AR_shotgun profile");
+            SetAIsProfile(AR_Shotgun);
+        }
+        else if(AR_Sniper_Diff > 0.25f)
+        {
+            Debug.Log("AR_snioper profile");
+            SetAIsProfile(AR_Sniper);
+        }
+        else if(Shotgun_Sniper_Diff > 0.25f)
+        {
+            Debug.Log("Shotgun_Sniper profile");
+            SetAIsProfile(Shotgun_Sniper);
+        }
+        else
+        {
+            Debug.Log("Default profile");
+            SetAIsProfile(Default);
+        }
+
+        Debug.Log("1: " + AR_Shotgun_diff + ", 2: " + AR_Sniper_Diff + ", 3: " + Shotgun_Sniper_Diff);
+    }
+
+    void SetAIsProfile(AI_Score_Profile profile)
+    {
+        EnemyAI_Controller[] enemies = FindObjectsOfType<EnemyAI_Controller>();
+
+        for(int i = 0; i < enemies.Length; i++)
+        {
+            enemies[i].currProfile = profile;
+            Debug.Log("Set profile " + i);
+        }
+    }
 	
 	// Update is called once per frame
 	void Update ()
@@ -162,8 +245,4 @@ public class GameManager : MonoBehaviour {
         // Count how long the player has been in game.
         timeSinceStart += Time.deltaTime;
 	}
-
-    
-
-    
 }

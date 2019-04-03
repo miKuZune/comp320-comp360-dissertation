@@ -162,7 +162,7 @@ public class DatabaseManager : MonoBehaviour
 
         currSessionEventData.Add(newData);
 
-        OutputPredictedWeaponPrefs();
+        PredictAndStoreWeaponPrefs();
     }
 
     public void InsertAllData()
@@ -205,7 +205,7 @@ public class DatabaseManager : MonoBehaviour
         Debug.Log("entered data");
     }
 
-    void OutputPredictedWeaponPrefs()
+    void PredictAndStoreWeaponPrefs()
     {
         string previousTime = "";
         UnityTime uTime = new UnityTime();
@@ -259,7 +259,7 @@ public class DatabaseManager : MonoBehaviour
         string outty = "Weapon prefs; AR: " + GameManager.instance.AR_wep_pref;
         outty += "; Shotgun: " + GameManager.instance.Shotgun_wep_pref;
         outty += "; Sniper: " + GameManager.instance.Sniper_wep_pref;
-        Debug.Log(outty);
+        //Debug.Log(outty);
 
     }
 

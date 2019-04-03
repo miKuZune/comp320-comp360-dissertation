@@ -43,6 +43,8 @@ public class EnemyAI_Controller : MonoBehaviour {
 
     float timer;
 
+    public AI_Score_Profile currProfile;
+
     // Data collection variables.
     bool hasBeenShot = false;
     float timeSinceFirstShot;
@@ -150,11 +152,11 @@ public class EnemyAI_Controller : MonoBehaviour {
         {
             if(hit.transform.tag != "Player")
             {
-                score = 125;
+                score = currProfile.CantSeePlayerScore;
             }
             else
             {
-                score = (int)hit.distance;                          // Set the score to the distance between the player and the AI.
+                if (hit.distance > currProfile.maxDistanceToShootAtPlayer) { score = currProfile.RunToPlayerScore; }
             }
         }
 
@@ -177,7 +179,7 @@ public class EnemyAI_Controller : MonoBehaviour {
             }
         }
 
-        if (nearestDist < 50 && nearestDist > 5) { score = 50; }
+        if (nearestDist < 50 && nearestDist > 5) { score = currProfile.InProximityToCoverScore; }
 
         return score;
     }
@@ -193,11 +195,11 @@ public class EnemyAI_Controller : MonoBehaviour {
 
         float healthPercent = (float)playerH.currHealth / (float)playerH.maxHealth;
 
-        if (healthPercent < 0.2) { score = 110; }               // Set score when the player's health is below a certain point.
+        if (healthPercent < currProfile.percentageHealthToFireAtPlayer) { score = currProfile.p_healthLessThanpercentScore; }               // Set score when the player's health is below a certain point.
         else
         {
             float distToPlayer = Vector3.Distance(this.transform.position, player.transform.position);      // Else set the score to a value - the distance between them.
-            score = 100 - (int)distToPlayer;
+            if (distToPlayer < currProfile.maxDistanceToShootAtPlayer) { score = currProfile.ShootAtPlayerScore; }
         }
         return score;
     }
@@ -210,7 +212,7 @@ public class EnemyAI_Controller : MonoBehaviour {
 
         float healthPercent = (float)h.currHealth / (float)h.maxHealth;             // Get AI health as a percentage.
 
-        if (healthPercent < 0.2) { score = 150; }                                   // Set score if it is below a threshold.
+        if (healthPercent < currProfile.percentageHealthToFleeAt) { score = currProfile.fleeScore; }// Set score if it is below a threshold.
 
         return score;
     }
@@ -224,6 +226,7 @@ public class EnemyAI_Controller : MonoBehaviour {
         // Store the data in the database.
         DatabaseManager.instance.StoreNewEventData(killGunName, AI_PlayerDist, timeSinceFirstShot);
         DatabaseManager.instance.currSessionData.enemiesKilled++;
+        GameManager.instance.ChooseAIProfile();
         // Tell the gamemanager that an enemy has been killed so it can handle the rounds.
         GameManager.instance.IncrementEnemiesKilled();
     }

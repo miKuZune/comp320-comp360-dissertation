@@ -276,7 +276,7 @@ public class StepwiseRegression {
             else { coefficients[i] = 0; }
             outty += coefficients[i] + ", ";
         }
-        Debug.Log(outty);
+        //Debug.Log(outty);
 
         return coefficients;
     }

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2bcff7cf755e8f438caebd58a7b1843, type: 3}
+  m_Name: AR_Sniper
+  m_EditorClassIdentifier: 
+  RunToPlayerScore: 100
+  CantSeePlayerScore: 125
+  InProximityToCoverScore: 110
+  percentageHealthToFireAtPlayer: 0.2
+  p_healthLessThanpercentScore: 115
+  maxDistanceToShootAtPlayer: 30
+  ShootAtPlayerScore: 115
+  percentageHealthToFleeAt: 0.2
+  fleeScore: 130
