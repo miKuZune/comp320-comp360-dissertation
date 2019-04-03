@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+using System.Data;
+using Mono.Data.Sqlite;
+
 public class MenuManager : MonoBehaviour {
 
     Image loadingImg;
@@ -22,8 +25,34 @@ public class MenuManager : MonoBehaviour {
 
         int enableML = rand.Next(0, 2);
         PlayerPrefs.SetInt("enableML", enableML);
-        Debug.Log("Player pref set to: " + PlayerPrefs.GetInt("enableML"));
         loadingImg.enabled = true;
+
+        // Set the finished rounds - here rounds are the session each individual has played. 
+        PlayerPrefs.SetInt("FinishedRounds", 0);
+        Debug.Log(PlayerPrefs.GetInt("FinishedRounds"));
+
+        // Get the SessionID for the A/B tests.
+        string connString = "URI=file:" + Application.dataPath + "/DB_Official.db";
+        IDbConnection dbConn = new SqliteConnection(connString);
+        dbConn.Open();
+
+        IDbCommand comm = dbConn.CreateCommand();
+        string Query = "SELECT * FROM MLSessionData";
+        comm.CommandText = Query;
+        IDataReader reader = comm.ExecuteReader();
+
+        int sessionCount = 0;
+        while(reader.Read())
+        {
+            sessionCount++;
+        }
+
+        sessionCount += 1;
+
+        Debug.Log(sessionCount);
+        PlayerPrefs.SetInt("NewSessionID", sessionCount);
+
+        dbConn.Close();
 
         SceneManager.LoadScene(sceneName);
     }
@@ -31,12 +60,10 @@ public class MenuManager : MonoBehaviour {
     {
         loadingImg.enabled = true;
 
-        Debug.Log("before " + PlayerPrefs.GetInt("enableML"));
         int enableML = 0;
-        if (PlayerPrefs.GetInt("enableML") == 0) { enableML = 1; Debug.Log("Set enableML to " + enableML); }
+        if (PlayerPrefs.GetInt("enableML") == 0) { enableML = 1;}
         
         PlayerPrefs.SetInt("enableML", enableML);
-        Debug.Log("after " + PlayerPrefs.GetInt("enableML"));
 
         SceneManager.LoadScene("SampleScene");
     }

@@ -12,14 +12,14 @@ public class Player_Char_Manager : MonoBehaviour , I_CharManager{
         Gun_Manager.instance.SetInactive();         // Stop the player from shooting.
         GameManager.instance.ToggleMouse();         // Show the mouse.
 
-        int currSessionsFinished = PlayerPrefs.GetInt("RoundsFinished");
-        PlayerPrefs.SetInt("RoundsFinished", currSessionsFinished++);
-
+        int currSessionsFinished = PlayerPrefs.GetInt("FinishedRounds") + 1;
+        
+        PlayerPrefs.SetInt("FinishedRounds", currSessionsFinished);
         Instantiate(Resources.Load("DeathScreen"), Vector3.zero, Quaternion.identity);          // Bring up the death screen.
 
 
 
-        if (PlayerPrefs.GetInt("RoundsFinished") >= 2)
+        if (PlayerPrefs.GetInt("FinishedRounds") >= 2)
         {
             GameObject.Find("NextSession").SetActive(false);
         }

@@ -56,6 +56,17 @@ public class StepwiseRegression {
         // Data to get to be sorted to get independent and dependent variables.
         double[][] inputs_Events = GetEventData(sessionCount, columnCount, eventCount);     // independent 
         double[][] inputs_Session = GetSessionData(sessionCount);                           // independent
+
+        /*for(int i =0; i < inputs_Session.Length; i++)
+        {
+            string outty = "thing " + i + " : ";
+            for(int j = 0; j < inputs_Session[i].Length; j++)
+            {
+                outty += inputs_Session[i][j] + ", ";
+            }
+            Debug.Log(outty);
+        }*/
+        Debug.Log(sessionCount);
         double[][] weaponPrefs = GetWeaponPreferences(inputs_Session);                      // dependent
 
         // Stores the dependent variables for each of the different weapons.
@@ -91,11 +102,8 @@ public class StepwiseRegression {
         }
 
         // Get the prediction models for each of the weapon preferences.
-        Debug.Log("Get AR model pref");
         AR_model_Coeffs = GetWeaponPreferenceModel(inputs, AR_pref);
-        Debug.Log("Get shotgun model pref");
         Shotgun_model_Coeffs = GetWeaponPreferenceModel(inputs, shotgun_pref);
-        Debug.Log("Get sniper model pref");
         Sniper_model_Coeffs = GetWeaponPreferenceModel(inputs, sniper_pref);
 
 

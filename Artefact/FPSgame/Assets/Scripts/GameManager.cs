@@ -82,7 +82,6 @@ public class GameManager : MonoBehaviour {
 
         // Check if the ML should be enabled or not.
         int enableML = PlayerPrefs.GetInt("enableML");
-        Debug.Log("On start enableML is: " + enableML);
         if (enableML == 0) { Use_ML_toChangeAI_Profiles = false; }
         else { Use_ML_toChangeAI_Profiles = true; }
 
@@ -172,7 +171,7 @@ public class GameManager : MonoBehaviour {
 
     public void ChooseAIProfile()
     {
-        if (!Use_ML_toChangeAI_Profiles) { Debug.Log("Feature not enabled."); return; }
+        if (!Use_ML_toChangeAI_Profiles) {return; }
 
         // Calculate the differences.
         double AR_Shotgun_diff = AR_wep_pref - Shotgun_wep_pref;
@@ -186,41 +185,32 @@ public class GameManager : MonoBehaviour {
         // Look for AR profile
         if(AR_Shotgun_diff + AR_Sniper_Diff > 0.25f )
         {
-            Debug.Log("AR profile");
             SetAIsProfile(AR);
         }
         else if(AR_Shotgun_diff + Shotgun_Sniper_Diff > 0.25f )
         {
-            Debug.Log("Shotgun profile");
             SetAIsProfile(Shotgun);
         }
         else if(AR_Sniper_Diff + Shotgun_Sniper_Diff > 0.25f)
         {
-            Debug.Log("Sniper profile");
             SetAIsProfile(Sniper);
         }
         else if(AR_Shotgun_diff > 0.25f)
         {
-            Debug.Log("AR_shotgun profile");
             SetAIsProfile(AR_Shotgun);
         }
         else if(AR_Sniper_Diff > 0.25f)
         {
-            Debug.Log("AR_snioper profile");
             SetAIsProfile(AR_Sniper);
         }
         else if(Shotgun_Sniper_Diff > 0.25f)
         {
-            Debug.Log("Shotgun_Sniper profile");
             SetAIsProfile(Shotgun_Sniper);
         }
         else
         {
-            Debug.Log("Default profile");
             SetAIsProfile(Default);
         }
-
-        Debug.Log("1: " + AR_Shotgun_diff + ", 2: " + AR_Sniper_Diff + ", 3: " + Shotgun_Sniper_Diff);
     }
 
     void SetAIsProfile(AI_Score_Profile profile)
@@ -230,7 +220,6 @@ public class GameManager : MonoBehaviour {
         for(int i = 0; i < enemies.Length; i++)
         {
             enemies[i].currProfile = profile;
-            Debug.Log("Set profile " + i);
         }
     }
 	

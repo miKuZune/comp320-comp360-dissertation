@@ -19,6 +19,13 @@ public class DatabaseManager : MonoBehaviour
     const string EventsTable = "Events";                                                                // Stores the name of the table used to store the data.
     const string SessionTable = "SessionData";
 
+    const string No_ML_Events_Table = "NoMLEventData";
+    const string No_ML_Session_Table = "NoMLSessionData";
+
+    const string ML_Events_Table = "MLEventData";
+    const string ML_Session_Table = "MLSessionData";
+
+
     int currSessionID;                                                                                  // Stores a sessionID value to uniquley identfy the set of data created in one play session.
 
     List<EventTableData> PreExistingEventData = new List<EventTableData>();                                        // Stores the list of previous data from the database.
@@ -172,12 +179,39 @@ public class DatabaseManager : MonoBehaviour
 
         string SQL_Command = "";
         IDbCommand comm;
+
+        // Decide which of the the A/B tables to insert into.
+        string ABeventTable = "";
+        string ABsessionTable = "";
+        if (GameManager.instance.Use_ML_toChangeAI_Profiles)
+        {
+            ABeventTable = ML_Events_Table;
+            ABsessionTable = ML_Session_Table;
+        }
+        else
+        {
+            ABeventTable = No_ML_Events_Table;
+            ABsessionTable = No_ML_Session_Table;
+        }
+        
+
         // Insert all event data stored.
         for (int i = 0; i < currSessionEventData.Count; i++)
         {
+            // Insert into the training data table.
             SQL_Command = "INSERT INTO " + EventsTable + "(SessionID, KillWeapon, Distance, TimeToKill, TimeStamp) Values( '"
                 + currSessionEventData[i].sessionID + "','" + currSessionEventData[i].killWeapon + "','"
                 + currSessionEventData[i].distance + "','" + currSessionEventData[i].killTime +  "','" + 
+                currSessionEventData[i].timeStamp + "')";
+
+            comm = dbConn.CreateCommand();
+            comm.CommandText = SQL_Command;
+            comm.ExecuteNonQuery();
+
+            // Insert into the A/B table.
+            SQL_Command = "INSERT INTO " + ABeventTable + "(SessionID, KillWeapon, Distance, TimeToKill, TimeStamp) Values( '"
+                + PlayerPrefs.GetInt("NewSessionID") + "','" + currSessionEventData[i].killWeapon + "','"
+                + currSessionEventData[i].distance + "','" + currSessionEventData[i].killTime + "','" +
                 currSessionEventData[i].timeStamp + "')";
 
             comm = dbConn.CreateCommand();
@@ -187,7 +221,7 @@ public class DatabaseManager : MonoBehaviour
         Debug.Log("Inserted events");
 
         // Insert session data.
-        
+        // Into training data table.
         SQL_Command = "INSERT INTO " + SessionTable + "(SessionID, totalHeadShots, totalBodyShots,  totalMissedShots, totalShots, endRound, enemiesKilled, AR_headShots, AR_bodyShots, AR_missedShots, AR_timeHeld" +
             ", S_headShots, S_bodyShots, S_missedShots, S_timeHeld, SR_headShots, SR_bodyShots, SR_missedShots, SR_timeHeld)" +
             " values( '"+ currSessionData.sessionID + "','" + currSessionData.head_shots + "','" + currSessionData.body_shots
@@ -196,6 +230,20 @@ public class DatabaseManager : MonoBehaviour
             + "','" + currSessionData.AR_missed_shots + "','" + currSessionData.AR_timeHeld + "','" + currSessionData.S_head_shots + "','" + currSessionData.S_body_shots
             + "','" + currSessionData.S_missed_shots + "','" + currSessionData.S_timeHeld + "','" + currSessionData.SR_head_shots + "','" + currSessionData.SR_body_shots
             + "','" + currSessionData.SR_missed_shots + "','"+ currSessionData.SR_timeHeld+ "')";
+
+        comm = dbConn.CreateCommand();
+        comm.CommandText = SQL_Command;
+        comm.ExecuteNonQuery();
+
+        // Insert into A/B table.
+        SQL_Command = "INSERT INTO " + ABsessionTable + "(SessionID, totalHeadShots, totalBodyShots,  totalMissedShots, totalShots, endRound, enemiesKilled, AR_headShots, AR_bodyShots, AR_missedShots, AR_timeHeld" +
+            ", S_headShots, S_bodyShots, S_missedShots, S_timeHeld, SR_headShots, SR_bodyShots, SR_missedShots, SR_timeHeld)" +
+            " values( '" + PlayerPrefs.GetInt("NewSessionID") + "','" + currSessionData.head_shots + "','" + currSessionData.body_shots
+            + "','" + currSessionData.missed_shots + "','" + currSessionData.total_shots + "','" + currSessionData.endRound
+            + "','" + currSessionData.enemiesKilled + "','" + currSessionData.AR_head_shots + "','" + currSessionData.AR_body_shots
+            + "','" + currSessionData.AR_missed_shots + "','" + currSessionData.AR_timeHeld + "','" + currSessionData.S_head_shots + "','" + currSessionData.S_body_shots
+            + "','" + currSessionData.S_missed_shots + "','" + currSessionData.S_timeHeld + "','" + currSessionData.SR_head_shots + "','" + currSessionData.SR_body_shots
+            + "','" + currSessionData.SR_missed_shots + "','" + currSessionData.SR_timeHeld + "')";
 
         comm = dbConn.CreateCommand();
         comm.CommandText = SQL_Command;
