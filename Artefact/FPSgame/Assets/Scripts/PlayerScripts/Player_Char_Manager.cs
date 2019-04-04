@@ -26,7 +26,6 @@ public class Player_Char_Manager : MonoBehaviour , I_CharManager{
         else { GameObject.Find("ReturnToMainMenu").SetActive(false); }
 
         DatabaseManager.instance.InsertAllData();
-        
     }
 
     public void OnDmg()

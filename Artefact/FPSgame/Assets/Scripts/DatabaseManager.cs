@@ -150,7 +150,7 @@ public class DatabaseManager : MonoBehaviour
         
     }
 
-    public void StoreNewEventData(string killWeapon, float distance, float killtime)
+    public void StoreNewEventData(string killWeapon, float distance, float killtime, string profileName)
     {
         EventTableData newData = new EventTableData();
 
@@ -158,6 +158,7 @@ public class DatabaseManager : MonoBehaviour
         newData.killWeapon = killWeapon;
         newData.distance = distance;
         newData.killTime = killtime;
+        newData.currProfile = profileName;
         // Get the current time.
         float timeStamp = GameManager.instance.timeSinceStart;
 
@@ -209,10 +210,10 @@ public class DatabaseManager : MonoBehaviour
             comm.ExecuteNonQuery();
 
             // Insert into the A/B table.
-            SQL_Command = "INSERT INTO " + ABeventTable + "(SessionID, KillWeapon, Distance, TimeToKill, TimeStamp) Values( '"
+            SQL_Command = "INSERT INTO " + ABeventTable + "(SessionID, KillWeapon, Distance, TimeToKill, TimeStamp, AICurrentProfile) Values( '"
                 + PlayerPrefs.GetInt("NewSessionID") + "','" + currSessionEventData[i].killWeapon + "','"
                 + currSessionEventData[i].distance + "','" + currSessionEventData[i].killTime + "','" +
-                currSessionEventData[i].timeStamp + "')";
+                currSessionEventData[i].timeStamp + "','" + currSessionEventData[i].currProfile + "')";
 
             comm = dbConn.CreateCommand();
             comm.CommandText = SQL_Command;
@@ -338,6 +339,7 @@ class EventTableData
     public float distance;
     public float killTime;
     public string timeStamp;
+    public string currProfile;
 }
 
 // Store the data to be stored in the database relating to the session data.

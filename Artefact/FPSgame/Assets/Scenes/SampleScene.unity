@@ -33441,7 +33441,7 @@ MonoBehaviour:
   Sniper_wep_pref: 0
   timeSinceStart: 0
   mapWeaponPrefsAsPercentage: 1
-  Use_ML_toChangeAI_Profiles: 0
+  Use_ML_toChangeAI_Profiles: 1
   AR: {fileID: 11400000, guid: ea0ab9c57ba0b51438799aac054321ff, type: 2}
   Shotgun: {fileID: 11400000, guid: f818e236c9d488f49805451adff2e913, type: 2}
   Sniper: {fileID: 11400000, guid: 1aa267cd15f65134ab339a31e692229f, type: 2}

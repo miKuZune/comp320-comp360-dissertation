@@ -183,33 +183,37 @@ public class GameManager : MonoBehaviour {
         Shotgun_Sniper_Diff = System.Math.Sqrt(Shotgun_Sniper_Diff * Shotgun_Sniper_Diff);
 
         // Look for AR profile
-        if(AR_Shotgun_diff + AR_Sniper_Diff > 0.25f )
+        double meanDelta = (AR_Shotgun_diff + AR_Sniper_Diff + Shotgun_Sniper_Diff) / 3;
+
+        if (meanDelta > 0.35f)               // Check if the difference is signifigant.
         {
-            SetAIsProfile(AR);
-        }
-        else if(AR_Shotgun_diff + Shotgun_Sniper_Diff > 0.25f )
-        {
-            SetAIsProfile(Shotgun);
-        }
-        else if(AR_Sniper_Diff + Shotgun_Sniper_Diff > 0.25f)
-        {
-            SetAIsProfile(Sniper);
-        }
-        else if(AR_Shotgun_diff > 0.25f)
-        {
-            SetAIsProfile(AR_Shotgun);
-        }
-        else if(AR_Sniper_Diff > 0.25f)
-        {
-            SetAIsProfile(AR_Sniper);
-        }
-        else if(Shotgun_Sniper_Diff > 0.25f)
-        {
-            SetAIsProfile(Shotgun_Sniper);
+            if(Sniper_wep_pref > (AR_wep_pref + Shotgun_wep_pref) / 2)
+            {
+                SetAIsProfile(Sniper);
+            }
+            else if(Shotgun_wep_pref > (AR_wep_pref + Sniper_wep_pref))
+            {
+                SetAIsProfile(Shotgun);
+            }
+            else if(AR_wep_pref > (Shotgun_wep_pref + Sniper_wep_pref) / 2)
+            {
+                SetAIsProfile(AR);
+            }
         }
         else
         {
-            SetAIsProfile(Default);
+            if(Shotgun_Sniper_Diff > (AR_Shotgun_diff + AR_Sniper_Diff) / 2)
+            {
+                SetAIsProfile(Shotgun_Sniper);
+            }
+            else if(AR_Sniper_Diff > (AR_Shotgun_diff + Shotgun_Sniper_Diff) / 2)
+            {
+                SetAIsProfile(AR_Sniper);
+            }
+            else if(AR_Shotgun_diff > (AR_Sniper_Diff + Shotgun_Sniper_Diff) / 2)
+            {
+                SetAIsProfile(AR_Shotgun);
+            }
         }
     }
 

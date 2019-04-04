@@ -224,7 +224,7 @@ public class EnemyAI_Controller : MonoBehaviour {
         float AI_PlayerDist = Vector3.Distance(transform.position, player.transform.position);
         string killGunName = player.GetComponent<Gun_Manager>().currentGun.Gun_Name;
         // Store the data in the database.
-        DatabaseManager.instance.StoreNewEventData(killGunName, AI_PlayerDist, timeSinceFirstShot);
+        DatabaseManager.instance.StoreNewEventData(killGunName, AI_PlayerDist, timeSinceFirstShot, currProfile.name);
         DatabaseManager.instance.currSessionData.enemiesKilled++;
         GameManager.instance.ChooseAIProfile();
         // Tell the gamemanager that an enemy has been killed so it can handle the rounds.
