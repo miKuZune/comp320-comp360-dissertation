@@ -102,6 +102,12 @@ public class GameManager : MonoBehaviour {
         stepwiseRegression.GetModel();
     }
 
+    public void Analyse()
+    {
+        DataAnalysis DA = new DataAnalysis();
+        DA.Analyse();
+    }
+
     public void ToggleMouse()
     {
         Cursor.visible = !Cursor.visible;                                                               // Makes the cursor visible/invisble to the player.

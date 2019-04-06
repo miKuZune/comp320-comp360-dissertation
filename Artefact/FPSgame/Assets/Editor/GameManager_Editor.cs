@@ -14,6 +14,11 @@ public class GameManager_Editor: Editor
         {
             (target as GameManager).GetModel();
         }
+
+        if(GUILayout.Button("Analyse"))
+        {
+            (target as GameManager).Analyse();
+        }
     }
 
 }
