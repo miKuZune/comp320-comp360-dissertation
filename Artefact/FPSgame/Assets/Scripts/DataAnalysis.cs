@@ -36,7 +36,7 @@ public class DataAnalysis : MonoBehaviour
         int iter = 0;
 
         List<double[]> currSessionsEventData = new List<double[]>();
-
+        // Get the mean of each session of the No ML event data.
         double previousSessionID = 0;
         for (int i = 0; i < noML_eventData.Length; i++)
         {
@@ -58,6 +58,7 @@ public class DataAnalysis : MonoBehaviour
 
         previousSessionID = 0;
         iter = 0;
+        // Get the mean of each sessions data when ML was present.
         for (int i = 0; i < ML_eventData.Length; i++)
         {
             if (ML_eventData[i][0] != previousSessionID)
@@ -74,35 +75,83 @@ public class DataAnalysis : MonoBehaviour
         }
         meanMLEventDataOfEachSession[iter] = GetMeanOfData(currSessionsEventData);
 
+        // Calculate the experience difference scores.
         List<double> experienceDifferenceScores = new List<double>();
 
         for (int i = 0; i < meanNoMLEventDataOfEachSession.Length; i++)
         {
-            Debug.Log( "session " + i + ": " + GetDifferenceScore(meanMLEventDataOfEachSession[i], meanNoMLEventDataOfEachSession[i], ML_sessionData[i], noML_sessionData[i]));
-            //experienceDifferenceScores.Add(GetDifferenceScore(meanMLEventDataOfEachSession[i], meanNoMLEventDataOfEachSession[i], ML_sessionData[i], noML_sessionData[i]));
+            experienceDifferenceScores.Add(GetDifferenceScore(meanMLEventDataOfEachSession[i], meanNoMLEventDataOfEachSession[i], ML_sessionData[i], noML_sessionData[i]));
         }
 
+        Debug.Log("ML vs NoML scores:");
         for (int i = 0; i < experienceDifferenceScores.Count; i++)
         {
             Debug.Log("Score " + i + ": " + experienceDifferenceScores[i]);
         }
 
+        Debug.Log("No ML experience differences:");
+        // Get the mean of all non ML data.
+        double[] meanOfAllNoMLEventData = GetMeanOfData(noML_eventData);
+        double[] meanOfAllNoMLSessionData = GetMeanOfData(noML_sessionData);
+        // For storing the data without session IDs.
+        double[] meanOfAllNoMLEventData_Sorted = new double[meanOfAllNoMLEventData.Length - 1];
+        double[] meanOfAllNoMLSessionData_Sorted = new double[meanOfAllNoMLSessionData.Length - 1];
+        // Store a sorted version of each sessions data
+        double[][] meanNoMLeventDataOfEachSession_Sorted = new double[meanNoMLEventDataOfEachSession.Length][];
+        double[][] NoMLSessionData_Sorted = new double[noML_sessionData.Length][];
+        // Sort the session IDs out of the event data.
+        for(int i = 0; i < meanNoMLEventDataOfEachSession.Length; i++)
+        {
+            double[] newEntry = new double[meanNoMLEventDataOfEachSession[i].Length - 1];
+            for(int j = 1; j < meanNoMLEventDataOfEachSession[i].Length; j++)
+            {
+                newEntry[j - 1] = meanNoMLEventDataOfEachSession[i][j];
+            }
+            meanNoMLeventDataOfEachSession_Sorted[i] = newEntry;
+        }
+        // Sort the session IDs out of the session data.
+        for(int i = 0; i < noML_sessionData.Length; i++)
+        {
+            double[] newEntry = new double[noML_sessionData.Length - 1];
+            for(int j = 1; j < noML_sessionData[i].Length; j++)
+            {
+                newEntry[j - 1] = noML_sessionData[i][j];
+            }
+            NoMLSessionData_Sorted[i] = newEntry;
+        }
+        // Sort the session IDs out of the mean data.
+        for(int i = 1; i < meanOfAllNoMLEventData.Length; i++){meanOfAllNoMLEventData_Sorted[i - 1] = meanOfAllNoMLEventData[i];}
+        for(int i = 1; i < meanOfAllNoMLSessionData.Length; i++){meanOfAllNoMLSessionData_Sorted[i - 1] = meanOfAllNoMLSessionData[i];}
+
+        // Get experience difference scores for each no ml session compared to the average of all no ml sessions.
+        List<double> noML_experienceDifferenceScores = new List<double>();
+
+        for(int i = 0; i < meanNoMLeventDataOfEachSession_Sorted.Length; i++)
+        {
+            double score = GetDifferenceScore(meanOfAllNoMLEventData_Sorted, meanNoMLeventDataOfEachSession_Sorted[i], meanOfAllNoMLSessionData_Sorted, NoMLSessionData_Sorted[i]);
+            noML_experienceDifferenceScores.Add(score);
+        }
+
+        for(int i = 0; i < noML_experienceDifferenceScores.Count; i++)
+        {
+            Debug.Log("Score: " + noML_experienceDifferenceScores[i]);
+        }
 
     }
 
-    double GetDifferenceScore(double[] meanMLEventData, double[] meanNoMLEventData, double[] MLSessionData, double[] NoMLSessionData)
+    double GetDifferenceScore(double[] eventData1, double[] eventData2, double[] sessionData1, double[] sessionData2)
     {
         double score = 0;
 
-        for(int i = 0; i < meanMLEventData.Length; i++)
+        for(int i = 0; i < eventData1.Length; i++)
         {
-            double value = meanMLEventData[i] - meanNoMLEventData[i];
+            double value = eventData1[i] - eventData2[i];
             score += System.Math.Sqrt(value * value);
         }
 
-        for(int i = 0; i < MLSessionData.Length; i++)
+        for(int i = 0; i < sessionData1.Length; i++)
         {
-            double value = MLSessionData[i] - NoMLSessionData[i];
+            double value = sessionData1[i] - sessionData2[i];
             score += System.Math.Sqrt(value * value);
         }
 

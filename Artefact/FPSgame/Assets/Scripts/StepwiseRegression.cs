@@ -13,7 +13,7 @@ using System;
 
 public class StepwiseRegression {
 
-    const string DB_name = "/DB_Official.db";
+    const string DB_name = "/DB_PreTests.db";
 
     double[] AR_model_Coeffs;
     double[] Shotgun_model_Coeffs;
@@ -95,7 +95,29 @@ public class StepwiseRegression {
         Shotgun_model_Coeffs = GetWeaponPreferenceModel(inputs, shotgun_pref);
         Sniper_model_Coeffs = GetWeaponPreferenceModel(inputs, sniper_pref);
 
+        string outty = "AR Model: ";
+        for(int i = 0; i < AR_model_Coeffs.Length; i++)
+        {
+            int variableNum = i + 1;
+            outty += "(x" + variableNum + " * " + AR_model_Coeffs[i] + "),";
+        }
+        Debug.Log(outty);
 
+        outty = "Shotgun Model: ";
+        for (int i = 0; i < Shotgun_model_Coeffs.Length; i++)
+        {
+            int variableNum = i + 1;
+            outty += "(x" + variableNum + " * " + Shotgun_model_Coeffs[i] + "),";
+        }
+        Debug.Log(outty);
+
+        outty = "Sniper Model: ";
+        for (int i = 0; i < Sniper_model_Coeffs.Length; i++)
+        {
+            int variableNum = i + 1;
+            outty += "(x" + variableNum + " * " + Sniper_model_Coeffs[i] + "),";
+        }
+        Debug.Log(outty);
         // Find the highest score in the data so that a percentage of the highest can be calcualted.
         for (int i = 0; i < inputs.Length; i++)
         {
