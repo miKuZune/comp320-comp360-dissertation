@@ -33,6 +33,9 @@ public class DataAnalysis : MonoBehaviour
 
         double[][] meanNoMLEventDataOfEachSession = new double[noML_sessionData.Length][];
         double[][] meanMLEventDataOfEachSession = new double[ML_sessionData.Length][];
+
+        double[] highestDifferencePerVariable_Event;
+        double[] highestDifferencePerVariable_Session;
         int iter = 0;
 
         List<double[]> currSessionsEventData = new List<double[]>();
@@ -78,18 +81,14 @@ public class DataAnalysis : MonoBehaviour
         // Calculate the experience difference scores.
         List<double> experienceDifferenceScores = new List<double>();
 
+        double[] highestDifferences = GetHighestDifferences(meanNoMLEventDataOfEachSession, meanMLEventDataOfEachSession, noML_sessionData, ML_sessionData);
+
         for (int i = 0; i < meanNoMLEventDataOfEachSession.Length; i++)
         {
-            experienceDifferenceScores.Add(GetDifferenceScore(meanMLEventDataOfEachSession[i], meanNoMLEventDataOfEachSession[i], ML_sessionData[i], noML_sessionData[i]));
+            experienceDifferenceScores.Add(GetDifferenceScore(meanMLEventDataOfEachSession[i], meanNoMLEventDataOfEachSession[i], ML_sessionData[i], noML_sessionData[i], highestDifferences));
         }
 
-        Debug.Log("ML vs NoML scores:");
-        for (int i = 0; i < experienceDifferenceScores.Count; i++)
-        {
-            Debug.Log("Score " + i + ": " + experienceDifferenceScores[i]);
-        }
 
-        Debug.Log("No ML experience differences:");
         // Get the mean of all non ML data.
         double[] meanOfAllNoMLEventData = GetMeanOfData(noML_eventData);
         double[] meanOfAllNoMLSessionData = GetMeanOfData(noML_sessionData);
@@ -126,33 +125,113 @@ public class DataAnalysis : MonoBehaviour
         // Get experience difference scores for each no ml session compared to the average of all no ml sessions.
         List<double> noML_experienceDifferenceScores = new List<double>();
 
+
+        double[][] temp = new double[meanNoMLeventDataOfEachSession_Sorted.Length][];
+        double[][] temp2 = new double[NoMLSessionData_Sorted.Length][];
+
+        for (int i = 0; i < temp.Length; i++) { temp[i] = meanOfAllNoMLEventData_Sorted; }
+        for (int i = 0; i < temp2.Length; i++) { temp2[i] = meanOfAllNoMLSessionData_Sorted; }
+
+        highestDifferences = GetHighestDifferences(temp, meanNoMLeventDataOfEachSession_Sorted, temp2, NoMLSessionData_Sorted);
+
         for(int i = 0; i < meanNoMLeventDataOfEachSession_Sorted.Length; i++)
         {
-            double score = GetDifferenceScore(meanOfAllNoMLEventData_Sorted, meanNoMLeventDataOfEachSession_Sorted[i], meanOfAllNoMLSessionData_Sorted, NoMLSessionData_Sorted[i]);
+            double score = GetDifferenceScore(meanOfAllNoMLEventData_Sorted, meanNoMLeventDataOfEachSession_Sorted[i], meanOfAllNoMLSessionData_Sorted, NoMLSessionData_Sorted[i], highestDifferences);
             noML_experienceDifferenceScores.Add(score);
         }
 
         for(int i = 0; i < noML_experienceDifferenceScores.Count; i++)
         {
-            Debug.Log("Score: " + noML_experienceDifferenceScores[i]);
+            //Debug.Log("NoML vs ML socre: " + experienceDifferenceScores[i] + " NoML vs NoMLAverage: " + noML_experienceDifferenceScores[i]);
         }
 
+        WriteToFile(experienceDifferenceScores, noML_experienceDifferenceScores);
     }
 
-    double GetDifferenceScore(double[] eventData1, double[] eventData2, double[] sessionData1, double[] sessionData2)
+    void WriteToFile(List<double> scores, List<double> scores2)
+    {
+        string dataPath = Application.dataPath + "/analysesResults.txt";
+        Debug.Log(dataPath);
+
+        System.IO.StreamWriter writer;
+        writer = new System.IO.StreamWriter(dataPath);
+        string inputText = "Ml vs NoML:";
+        for(int i = 0; i < scores.Count; i++)
+        {
+            inputText += scores[i] + "@";
+        }
+
+        inputText += "NoML vs NoMlMean:";
+        for(int i = 0; i < scores2.Count; i++)
+        {
+            inputText += scores2[i] + "@";
+        }
+
+        inputText = inputText.Replace("@", System.Environment.NewLine);
+
+
+        writer.Write(inputText);
+        writer.Close();
+
+        Debug.Log("File wrote");
+    }
+
+    double[] GetHighestDifferences(double[][] eventData1, double[][] eventData2, double[][] sessionData1, double[][] sessionData2)
+    {
+        Debug.Log("Some quick tests of stuff:");
+        Debug.Log(eventData1.Length + " " + eventData2.Length);
+        Debug.Log(sessionData1.Length + " " + sessionData2.Length);
+
+        double[] highestVariables = new double[eventData1[0].Length + sessionData1[0].Length];
+
+        for(int i = 0; i < eventData1.Length; i++)
+        {
+            for(int j = 0; j < eventData1[i].Length; j++)
+            {
+                double result = eventData1[i][j] - eventData2[i][j];
+
+                if (result < 0) { result = result * -1; }
+                if (result > highestVariables[j]) { highestVariables[j] = result;}
+            }
+        }
+
+        for(int i = 0; i < sessionData1.Length; i++)
+        {
+            for(int j = 0; j < sessionData1[i].Length; j++)
+            {
+                double result = sessionData1[i][j] - sessionData2[i][j];
+                if (result < 0) { result = result * -1; }
+                if (result > highestVariables[j + eventData1[i].Length]) { highestVariables[j + eventData1[i].Length] = result; }
+            }
+        }
+
+        return highestVariables;
+    }
+
+    double GetDifferenceScore(double[] eventData1, double[] eventData2, double[] sessionData1, double[] sessionData2, double[] highestDifferenceScores)
     {
         double score = 0;
 
         for(int i = 0; i < eventData1.Length; i++)
         {
             double value = eventData1[i] - eventData2[i];
-            score += System.Math.Sqrt(value * value);
+
+            if (value < 0) { value = value * -1; }
+
+            if (highestDifferenceScores[i] != 0){value = value / highestDifferenceScores[i];}
+
+            score += value;
         }
 
         for(int i = 0; i < sessionData1.Length; i++)
         {
             double value = sessionData1[i] - sessionData2[i];
-            score += System.Math.Sqrt(value * value);
+
+            if (value < 0) { value = value * -1; }
+
+            if (highestDifferenceScores[i + eventData1.Length] != 0) { value = value / highestDifferenceScores[i + eventData1.Length]; }
+
+            score += value;
         }
 
         return score;

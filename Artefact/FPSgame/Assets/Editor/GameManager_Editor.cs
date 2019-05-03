@@ -19,6 +19,11 @@ public class GameManager_Editor: Editor
         {
             (target as GameManager).Analyse();
         }
+
+        if(GUILayout.Button("Test data"))
+        {
+            (target as GameManager).Test();
+        }
     }
 
 }

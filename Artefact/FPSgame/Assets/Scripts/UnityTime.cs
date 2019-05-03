@@ -9,6 +9,7 @@ public class UnityTime
     // Seperates the seconds from the milliseconds.
     public int GetSeconds(float timeSinceStart)
     {
+        if (timeSinceStart == 0) { return 0; }
         int seconds = 0;
 
         string timeSinceStart_text = "" + timeSinceStart;
@@ -22,6 +23,7 @@ public class UnityTime
     // Seperates the milliseconds from the seconds.
     public int GetMilliseconds(float timeSinceStart)
     {
+        if (timeSinceStart == 0) { return 0; }
         int milliseconds = 0;
 
         string timeSinceStart_text = "" + timeSinceStart;
@@ -35,6 +37,7 @@ public class UnityTime
     // Gets the total mins that have elapsed based on the seconds that have elapsed.
     public int GetMinutes(int seconds)
     {
+        if (seconds == 0) { return 0; }
         int mins = 0;
 
         mins = seconds / 60;

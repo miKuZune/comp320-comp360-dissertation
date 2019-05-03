@@ -71,7 +71,7 @@ public class GameManager : MonoBehaviour {
     }
 
     // Use this for initialization
-    void Start ()
+    public void Start ()
     {
         ToggleMouse();
         // Gets references to the necessary objects in the scene.
@@ -93,6 +93,12 @@ public class GameManager : MonoBehaviour {
         GetModel();
 
         stepwiseRegression.MapPreferencesAsPercentage(mapWeaponPrefsAsPercentage);
+    }
+
+    public void Test()
+    {
+        TestDatabaseScript testDatabaseScript = new TestDatabaseScript();
+        testDatabaseScript.InsertData();
     }
 
     public void GetModel()
@@ -125,7 +131,7 @@ public class GameManager : MonoBehaviour {
         enemiesKilledInRound = 0;
         currActiveEnemies = 0;
         // Tell the player they are now in a new round.
-        HUD_Manager.instance.UpdateRoundText(roundNum);
+        if (HUD_Manager.instance != null) { HUD_Manager.instance.UpdateRoundText(roundNum); }
         DatabaseManager.instance.currSessionData.endRound++;
     }
     // Check if a new enemy needs to be created in the scene.

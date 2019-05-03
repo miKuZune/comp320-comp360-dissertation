@@ -9,8 +9,8 @@ public class DatabaseManager : MonoBehaviour
 {
     [SerializeField]
     bool stopInsertion = false;                                                                         // Used to stop this script from entering data to the DB. Useful for testing game systems without messing with data.
-    [SerializeField]
-    bool useOfficialTable = false;
+
+    public bool useOfficialTable = false;
 
     public static DatabaseManager instance;                                                             // Store a singleton reference to this script.
 
@@ -69,7 +69,7 @@ public class DatabaseManager : MonoBehaviour
     }
 
     // Read the data from the database and store it in a list.
-    private void ReadDB()
+    public void ReadDB()
     {
         // Connect to the database.
         IDbConnection dbConn = new SqliteConnection(connectionString);                          // Create a object to connect to the database stored in the connection location.
@@ -153,6 +153,7 @@ public class DatabaseManager : MonoBehaviour
     public void StoreNewEventData(string killWeapon, float distance, float killtime, string profileName)
     {
         EventTableData newData = new EventTableData();
+        UnityTime uTime = new UnityTime();
 
         newData.sessionID = currSessionID;
         newData.killWeapon = killWeapon;
@@ -162,15 +163,31 @@ public class DatabaseManager : MonoBehaviour
         // Get the current time.
         float timeStamp = GameManager.instance.timeSinceStart;
 
-        int milliseconds = unityTime.GetMilliseconds(timeStamp);
-        int seconds = unityTime.GetSeconds(timeStamp);
-        int mins = unityTime.GetMinutes(seconds);
+        int milliseconds = uTime.GetMilliseconds(timeStamp);
+        int seconds = uTime.GetSeconds(timeStamp);
+        int mins = uTime.GetMinutes(seconds);
         newData.timeStamp = mins + ":" + (seconds - (mins * 60)) + ":" + milliseconds;
 
 
+        if (!ValidateEventData(newData)) { throw new ArgumentException("Data given is invalid"); }
+
         currSessionEventData.Add(newData);
 
-        PredictAndStoreWeaponPrefs();
+        if(GameManager.instance.stepwiseRegression != null){PredictAndStoreWeaponPrefs();}      // If the stepwise regresion is setup, use it to predict weapon preferences.
+    }
+
+    bool ValidateEventData(EventTableData data)
+    {
+        if(data.killWeapon != "Assult Rifle" && data.killWeapon != "Shotgun" && data.killWeapon != "Sniper Rifle"){ Debug.Log(data.killWeapon); return false;}
+
+        if(data.distance < 0){ Debug.Log("dist " + data.distance); return false;}
+
+        if (data.killTime < 0) { Debug.Log("time " + data.killTime); return false; }
+
+        if ( data.currProfile != "AR" && data.currProfile != "AR_Shotgun" && data.currProfile != "AR_Sniper" && data.currProfile != "Default" && data.currProfile != "Shotgun_Sniper" &&
+            data.currProfile != "Shotgunner" && data.currProfile != "Sniper") { Debug.Log("profile " + data.currProfile); return false; }
+
+        return true;
     }
 
     public void InsertAllData()
@@ -254,7 +271,7 @@ public class DatabaseManager : MonoBehaviour
         Debug.Log("entered data");
     }
 
-    void PredictAndStoreWeaponPrefs()
+    public void PredictAndStoreWeaponPrefs()
     {
         string previousTime = "";
         UnityTime uTime = new UnityTime();
